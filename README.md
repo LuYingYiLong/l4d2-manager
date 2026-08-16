@@ -31,6 +31,7 @@ $ npm run dev
 
 GPLv3-only. Copyright and license notices for derived component code are
 preserved in the project source and LICENSE.
+
 ### Build
 
 ```bash

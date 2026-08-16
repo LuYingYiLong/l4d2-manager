@@ -1,2 +1,2 @@
 // SPDX-License-Identifier: GPL-3.0-only
-export * from './winui-components'
+export * from "./winui-components"

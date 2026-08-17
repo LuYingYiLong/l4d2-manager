@@ -1,9 +1,11 @@
 .page {
+	position: relative;
 	display: grid;
 	grid-template-rows: auto auto auto minmax(0, 1fr) 28px;
 	width: 100%;
 	height: 100%;
 	min-width: 760px;
+	padding-top: 38px;
 	color: var(--TextFillColorPrimary);
 	background:
 		radial-gradient(circle at 78% 4%, rgb(0 120 212 / 8%), transparent 32%),
@@ -39,8 +41,35 @@
 }
 
 .commandBar {
-	border-block: 1px solid var(--DividerStrokeColorDefault);
-	background: var(--LayerFillColorAlt);
+	width: max-content;
+	height: 38px;
+	min-height: 38px;
+	background: transparent;
+}
+
+.titleBarCommandBar :global(.commandbar-surface),
+.titleBarCommandBar :global(.commandbar-primary-content),
+.titleBarCommandBar :global(.commandbar-overflow-button),
+.titleBarCommandBar :global(.win-appbar-button),
+.titleBarCommandBar :global(.win-appbar-button .appbar-button-content-root) {
+	height: 38px;
+	min-height: 38px;
+}
+
+.titleBarCommandBar :global(.commandbar-surface) {
+	padding-left: 0;
+}
+
+.titleBarCommandBar :global(.win-appbar-button.label-right .appbar-button-content-root) {
+	grid-template-rows: 38px;
+}
+
+.titleBarCommandBar :global(.win-appbar-button.label-right .appbar-button-icon) {
+	margin-top: 11px;
+}
+
+.titleBarCommandBar :global(.win-appbar-button.label-right .appbar-button-label) {
+	margin-top: 10px;
 }
 
 .infoBar {
@@ -64,32 +93,14 @@
 }
 
 .explorerHeader {
-	display: grid;
-	grid-template-columns: minmax(130px, 0.8fr) minmax(210px, 1.2fr);
-	gap: 8px;
-	padding: 10px 12px;
+	display: block;
+	padding: 0 12px;
 	border-bottom: 1px solid var(--DividerStrokeColorDefault);
 	background: var(--LayerFillColorAlt);
 }
 
-.virtualPath {
-	align-self: center;
-	min-width: 0;
-	padding: 0 10px;
-	overflow: hidden;
-	color: var(--TextFillColorSecondary);
-	font-size: 12px;
-	line-height: 32px;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	border: 1px solid var(--ControlStrokeColorDefault);
-	border-radius: 4px;
-	background: var(--ControlFillColorDefault);
-}
-
 .filters {
 	display: grid;
-	grid-column: 1 / -1;
 	grid-template-columns: repeat(4, minmax(110px, 1fr)) 34px;
 	gap: 7px;
 }
@@ -98,6 +109,32 @@
 	min-width: 34px;
 	padding-inline: 0;
 	font-size: 18px;
+}
+
+.titleBarSearch {
+	position: absolute;
+	inset: 0 0 auto;
+	z-index: 10000;
+	display: flex;
+	width: 100%;
+	height: 38px;
+	min-width: 0;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
+}
+
+.titleBarSearch :global(.win-textbox) {
+	width: clamp(240px, 34vw, 420px);
+	pointer-events: auto;
+}
+
+.titleBarSearch :global(input),
+.titleBarSearch :global(button) {
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
 }
 
 .explorerBody {
@@ -176,7 +213,7 @@
 
 .addonRow {
 	display: grid;
-	grid-template-columns: 4px minmax(0, 1fr);
+	grid-template-columns: 4px 48px minmax(0, 1fr);
 	gap: 11px;
 	width: 100%;
 	min-width: 0;
@@ -189,6 +226,52 @@
 	min-height: 44px;
 	border-radius: 999px;
 	background: var(--SystemFillColorNeutral);
+}
+
+.addonThumbnail {
+	position: relative;
+	width: 48px;
+	height: 48px;
+	overflow: hidden;
+	border: 1px solid var(--ControlStrokeColorDefault);
+	border-radius: 6px;
+	background: var(--SubtleFillColorSecondary);
+}
+
+.addonThumbnail img {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+
+.addonThumbnail[data-loaded="true"] img {
+	opacity: 1;
+}
+
+.addonPlaceholder {
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	color: var(--TextFillColorSecondary);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	background: linear-gradient(
+		135deg,
+		var(--SubtleFillColorSecondary),
+		var(--ControlFillColorDefault)
+	);
+	transition: opacity 120ms ease;
+}
+
+.addonThumbnail[data-loaded="true"] .addonPlaceholder {
+	opacity: 0;
 }
 
 .addonState[data-enabled="true"] {

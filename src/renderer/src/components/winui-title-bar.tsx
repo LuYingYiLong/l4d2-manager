@@ -15,7 +15,7 @@ type WinTitleBarProps = WinProps & {
 	IsBackButtonVisible?: boolean
 	IsBackButtonEnabled?: boolean
 	IsPaneToggleButtonVisible?: boolean
-	PreferredHeightOption?: "Default" | "Tall" | string
+	PreferredHeightOption?: "Default" | "Tall" | "Compact" | string
 	AutoRefreshDragRegions?: boolean
 	TitleBarContentHorizontalAlignment?: string
 	TitleBarContentVerticalAlignment?: string
@@ -112,7 +112,10 @@ export const WinTitleBar = forwardRef<WinTitleBarHandle, WinTitleBarProps>(
 		const rightHeader = props.RightHeader as ReactNode
 		const hasContent = content !== undefined && content !== null
 		const isTall = props.PreferredHeightOption === "Tall"
-		const isExpandedHeight = isTall || hasContent || Boolean(leftHeader) || Boolean(rightHeader)
+		const isCompactHeight = props.PreferredHeightOption === "Compact"
+		const isExpandedHeight =
+			!isCompactHeight &&
+			(isTall || hasContent || Boolean(leftHeader) || Boolean(rightHeader))
 		const negativeInsetSpacing =
 			Boolean(props.IsBackButtonVisible) !== Boolean(props.IsPaneToggleButtonVisible)
 		const isEnabled = props.IsEnabled !== false

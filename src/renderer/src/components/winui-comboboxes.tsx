@@ -66,6 +66,9 @@ export function WinComboBox(
 					: -1)
 	const [selected, setSelected] = useState(initialSelectedIndex >= 0 ? initialSelectedIndex : -1)
 	const [open, setOpen] = useState(props.IsDropDownOpen ?? props.IsOpen ?? props.Open ?? false)
+	const [chevronClass, setChevronClass] = useState("")
+	const chevronPressed = useRef(false)
+	const chevronPressDone = useRef(false)
 	const [position, setPosition] = useState({
 		top: 0,
 		left: 0,
@@ -210,6 +213,29 @@ export function WinComboBox(
 			next ? "onDropDownOpened" : "onDropDownClosed",
 			next ? "DropDownOpened" : "DropDownClosed"
 		)?.(undefined)
+	}
+	const onChevronDown = () => {
+		chevronPressed.current = true
+		chevronPressDone.current = false
+		setChevronClass("pressing")
+	}
+	const onChevronUp = () => {
+		if (!chevronPressed.current) return
+		releaseChevron()
+	}
+	const releaseChevron = () => {
+		if (chevronClass === "") return
+		chevronPressed.current = false
+		if (chevronPressDone.current) setChevronClass("releasing")
+	}
+	const onChevronAnimEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
+		if (chevronClass === "pressing" && event.animationName === "chevron-press") {
+			chevronPressDone.current = true
+			if (!chevronPressed.current) setChevronClass("releasing")
+		} else if (chevronClass === "releasing" && event.animationName === "chevron-release") {
+			setChevronClass("")
+			chevronPressDone.current = false
+		}
 	}
 	useEffect(() => {
 		if (props.SelectedIndex !== undefined) setSelected(props.SelectedIndex)
@@ -536,16 +562,19 @@ export function WinComboBox(
 						aria-label="Open selection"
 						disabled={!enabled}
 						onClick={toggleEditableDropDown}
-					>
-						<span
-							className={cx(
-								"chevron-animate",
-								"win-combo-chevron",
-								open ? "is-open" : undefined
-							)}
-							aria-hidden="true"
-						/>
-					</button>
+						onPointerDown={(event) => {
+							event.preventDefault()
+							onChevronDown()
+						}}
+						onPointerUp={onChevronUp}
+						onPointerCancel={releaseChevron}
+						onPointerLeave={releaseChevron}
+					/>
+					<span
+						className={cx("chevron-animate", "win-combo-chevron", chevronClass)}
+						aria-hidden="true"
+						onAnimationEnd={onChevronAnimEnd}
+					/>
 				</div>
 			) : (
 				<button
@@ -563,6 +592,10 @@ export function WinComboBox(
 					disabled={!enabled}
 					onClick={toggle}
 					onKeyDown={onButtonKeyDown}
+					onPointerDown={onChevronDown}
+					onPointerUp={onChevronUp}
+					onPointerCancel={releaseChevron}
+					onPointerLeave={releaseChevron}
 				>
 					<span
 						className={cx(
@@ -575,12 +608,9 @@ export function WinComboBox(
 							: getLabel(selectedItem)}
 					</span>
 					<span
-						className={cx(
-							"chevron-animate",
-							"win-combo-chevron",
-							open ? "is-open" : undefined
-						)}
+						className={cx("chevron-animate", "win-combo-chevron", chevronClass)}
 						aria-hidden="true"
+						onAnimationEnd={onChevronAnimEnd}
 					/>
 				</button>
 			)}

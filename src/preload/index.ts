@@ -10,6 +10,7 @@ import { L4D2_IPC_CHANNELS } from "../shared/addon-types"
 const addons: L4D2AddonApi = {
 	detectGame: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.detectGame),
 	getSnapshot: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.getSnapshot),
+	getAddonImage: (id) => ipcRenderer.invoke(L4D2_IPC_CHANNELS.getAddonImage, id),
 	refresh: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.refresh),
 	setAddonEnabled: (id, enabled) =>
 		ipcRenderer.invoke(L4D2_IPC_CHANNELS.setAddonEnabled, id, enabled),

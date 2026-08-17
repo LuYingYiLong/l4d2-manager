@@ -43,6 +43,9 @@ export function registerAddonIpc(
 
 	handle(L4D2_IPC_CHANNELS.detectGame, () => manager.detectGame())
 	handle(L4D2_IPC_CHANNELS.getSnapshot, () => manager.getSnapshot())
+	handle(L4D2_IPC_CHANNELS.getAddonImage, (id: unknown) =>
+		manager.getAddonImage(requireString(id, "id"))
+	)
 	handle(L4D2_IPC_CHANNELS.refresh, () => manager.refresh())
 	handle(L4D2_IPC_CHANNELS.setAddonEnabled, (id: unknown, enabled: unknown) => {
 		if (typeof enabled !== "boolean") throw new Error("enabled 必须是布尔值")

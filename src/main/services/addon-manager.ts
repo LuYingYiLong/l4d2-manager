@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process"
 import { readFile } from "node:fs/promises"
-import { dirname, join } from "node:path"
+import { basename, dirname, extname, join } from "node:path"
 import { promisify } from "node:util"
 import { randomUUID } from "node:crypto"
 import type {
@@ -17,9 +17,11 @@ import type {
 import { formatAddonList, normalizeAddonPath, parseAddonList } from "./addon-list"
 import type { AddonListEntry } from "./addon-list"
 import { scanAddons } from "./addon-scanner"
+import { loadAddonImage } from "./addon-image"
 import { AddonStore, createDefaultStoreData, defaultPreferences } from "./addon-store"
 import type { AddonStoreData, PersistedAddonState } from "./addon-store"
 import { detectSteamL4D2 } from "./steam-discovery"
+import { fetchWorkshopNames, isWorkshopNameCacheFresh, workshopIdFromAddon } from "./steam-workshop"
 import { ensureWritable, pathExists, writeFileAtomically } from "./file-utils"
 
 const execFileAsync = promisify(execFile)
@@ -32,6 +34,10 @@ const emptyDetection: GameDetectionResult = {
 
 function cleanTags(tags: string[]): string[] {
 	return [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))]
+}
+
+function addonFallbackName(relativePath: string): string {
+	return basename(relativePath, extname(relativePath))
 }
 
 function persistedAddon(addon: AddonRecord): PersistedAddonState {
@@ -108,6 +114,12 @@ export class AddonManager {
 			lastCheckedAt: this.data.lastCheckedAt,
 			lastPushedAt: this.data.lastPushedAt
 		}
+	}
+
+	getAddonImage(id: string): Promise<string | null> {
+		const addon = this.requireAddon(id)
+		if (addon.missing) return Promise.resolve(null)
+		return loadAddonImage(addon.filePath)
 	}
 
 	detectGame(): Promise<GameDetectionResult> {
@@ -417,14 +429,75 @@ export class AddonManager {
 
 		this.addonListEntries = await readAddonList(this.detection.addonListPath)
 		const scan = await scanAddons(this.detection, this.addonListEntries, this.data.addons)
+		const workshopNameWarning = await this.updateWorkshopNames(scan.addons)
 		this.detection = {
 			...this.detection,
-			diagnostics: [...this.detection.diagnostics, ...scan.diagnostics]
+			diagnostics: [
+				...this.detection.diagnostics,
+				...scan.diagnostics,
+				...(workshopNameWarning ? [workshopNameWarning] : [])
+			]
 		}
 		this.addons = scan.addons
 
 		for (const addon of this.addons) this.data.addons[addon.id] = persistedAddon(addon)
 		await this.store.save(this.data)
+	}
+
+	private async updateWorkshopNames(addons: AddonRecord[]): Promise<string | null> {
+		const workshopAddons = addons.filter(
+			(addon) => addon.source === "workshop" && !addon.missing
+		)
+		const workshopIds = [
+			...new Set(
+				workshopAddons.map(workshopIdFromAddon).filter((id): id is string => id !== null)
+			)
+		]
+		const idsToFetch = workshopIds.filter((id) => {
+			const cached = this.data.workshopNames[id]
+			return !cached || !isWorkshopNameCacheFresh(cached.fetchedAt)
+		})
+		const previousNames = new Map(
+			idsToFetch.map((id) => [id, this.data.workshopNames[id]?.name] as const)
+		)
+		let warning: string | null = null
+
+		if (idsToFetch.length > 0) {
+			try {
+				const fetchedNames = await fetchWorkshopNames(idsToFetch)
+				const fetchedAt = new Date().toISOString()
+				for (const id of idsToFetch) {
+					if (!fetchedNames.has(id)) continue
+					this.data.workshopNames[id] = {
+						name: fetchedNames.get(id) ?? null,
+						fetchedAt
+					}
+				}
+			} catch (error) {
+				warning = `Steam Workshop 名称查询失败，已使用缓存或文件名：${
+					error instanceof Error ? error.message : String(error)
+				}`
+			}
+		}
+
+		for (const addon of addons) {
+			if (addon.source !== "workshop") continue
+			const id = workshopIdFromAddon(addon)
+			if (!id) continue
+
+			const cachedName = this.data.workshopNames[id]?.name
+			const persistedName = this.data.addons[addon.id]?.name
+			const fallbackName = addonFallbackName(addon.relativePath)
+			const previousName = previousNames.get(id)
+			const hasCustomName =
+				typeof persistedName === "string" &&
+				persistedName !== fallbackName &&
+				persistedName !== previousName
+
+			if (!hasCustomName && cachedName) addon.name = cachedName
+		}
+
+		return warning
 	}
 
 	private requireAddon(id: string): AddonRecord {

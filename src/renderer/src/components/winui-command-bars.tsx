@@ -888,35 +888,89 @@ export function WinDropDownButton(props: WinButtonMenuProps): React.JSX.Element 
 	const { items, placement } = buttonMenuDefinition(props)
 	const buttonProps = buttonPropsWithoutMenu(props)
 	const [menuOpen, setMenuOpen] = useState(false)
+	const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+	const [chevronClass, setChevronClass] = useState("")
+	const wrapRef = useRef<HTMLDivElement>(null)
+	const chevronPressed = useRef(false)
+	const chevronPressDone = useRef(false)
 	const className = typeof props.className === "string" ? props.className : undefined
 	const legacyClassName = typeof props.class === "string" ? props.class : undefined
+	const onChevronDown = () => {
+		chevronPressed.current = true
+		chevronPressDone.current = false
+		setChevronClass("pressing")
+	}
+	const releaseChevron = () => {
+		if (chevronClass === "") return
+		chevronPressed.current = false
+		if (chevronPressDone.current) setChevronClass("releasing")
+	}
+	const onChevronUp = () => {
+		if (!chevronPressed.current) return
+		releaseChevron()
+	}
+	const onChevronAnimationEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
+		if (chevronClass === "pressing" && event.animationName === "chevron-press") {
+			chevronPressDone.current = true
+			if (!chevronPressed.current) setChevronClass("releasing")
+		} else if (chevronClass === "releasing" && event.animationName === "chevron-release") {
+			chevronPressDone.current = false
+			setChevronClass("")
+		}
+	}
+	const toggle = (event: MouseEvent<HTMLButtonElement>) => {
+		if (props.IsEnabled === false) return
+		buttonClickHandler(props, event)
+		if (menuOpen) {
+			setMenuOpen(false)
+			return
+		}
+		setAnchorRect(wrapRef.current?.getBoundingClientRect() ?? null)
+		setMenuOpen(true)
+	}
 	return (
-		<WinMenuFlyout
-			Items={items}
-			Open={menuOpen}
-			onValueChange={setMenuOpen}
-			Placement={placement ?? "Bottom"}
-			Theme={props.Theme}
-			IsLightDismissEnabled={props.IsLightDismissEnabled}
-			OverlayInputPassThroughElement
-			Trigger={
-				<WinButton
-					{...buttonProps}
-					className={cx("win-dropdown-btn", className, legacyClassName)}
-					aria-haspopup="menu"
-					aria-expanded={menuOpen}
-					onClick={(event) => buttonClickHandler(props, event)}
-				>
-					<span className="win-dropdown-content">
-						{contentOf(props as WinProps, props.children as ReactNode)}
-					</span>
-					<span className="win-dd-chevron" aria-hidden="true">
-						{"\uE974"}
-					</span>
-				</WinButton>
-			}
-			onSelect={(item) => buttonMenuSelect(props, item)}
-		/>
+		<div ref={wrapRef} className="win-dropdown-btn-wrap">
+			<WinButton
+				{...buttonProps}
+				className={cx("win-dropdown-btn", className, legacyClassName)}
+				aria-haspopup="menu"
+				aria-expanded={menuOpen}
+				onClick={toggle}
+				onMouseDown={onChevronDown}
+				onMouseUp={onChevronUp}
+				onMouseLeave={releaseChevron}
+			>
+				<span className="win-dropdown-content">
+					{contentOf(props as WinProps, props.children as ReactNode)}
+				</span>
+				<span
+					className={cx(
+						"icon",
+						"win-dd-chevron",
+						"chevron-animate",
+						chevronClass,
+						menuOpen ? "open" : undefined
+					)}
+					aria-hidden="true"
+					onAnimationEnd={onChevronAnimationEnd}
+				/>
+			</WinButton>
+			<WinMenuFlyout
+				Items={items}
+				Open={menuOpen}
+				AnchorRect={anchorRect}
+				onValueChange={setMenuOpen}
+				Placement={placement ?? "Bottom"}
+				Theme={props.Theme}
+				IsLightDismissEnabled={props.IsLightDismissEnabled}
+				OverlayInputPassThroughElement
+				onClose={() => setMenuOpen(false)}
+				onSelect={(item) => {
+					buttonMenuSelect(props, item)
+					setMenuOpen(false)
+				}}
+			/>
+		</div>
 	)
 }
 

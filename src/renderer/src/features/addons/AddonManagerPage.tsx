@@ -26,8 +26,7 @@ import {
 	filterAndSortAddons,
 	findGroupTreeItem,
 	formatDate,
-	formatFileSize,
-	groupPath
+	formatFileSize
 } from "./addon-view"
 import styles from "./AddonManagerPage.module.css"
 
@@ -83,10 +82,66 @@ function parseTags(value: string): string[] {
 	]
 }
 
+function AddonThumbnail({ addon }: { addon: AddonRecord }): React.JSX.Element {
+	const shouldLoad = addon.source === "workshop" && !addon.missing
+	const [imageUrl, setImageUrl] = useState<string | null>(null)
+	const [imageLoaded, setImageLoaded] = useState(false)
+	const [loading, setLoading] = useState(shouldLoad)
+
+	useEffect(() => {
+		let active = true
+
+		if (!shouldLoad) {
+			return () => {
+				active = false
+			}
+		}
+
+		void window.api.addons
+			.getAddonImage(addon.id)
+			.then((url) => {
+				if (!active) return
+				setImageUrl(url)
+				setLoading(false)
+			})
+			.catch(() => {
+				if (active) setLoading(false)
+			})
+
+		return () => {
+			active = false
+		}
+	}, [addon.id, shouldLoad])
+
+	return (
+		<div
+			className={styles.addonThumbnail}
+			data-loaded={String(imageLoaded)}
+			data-loading={String(loading)}
+			aria-hidden="true"
+		>
+			{imageUrl && (
+				<img
+					alt=""
+					loading="lazy"
+					src={imageUrl}
+					onError={() => {
+						setImageUrl(null)
+						setImageLoaded(false)
+					}}
+					onLoad={() => setImageLoaded(true)}
+				/>
+			)}
+			<span className={styles.addonPlaceholder}>VPK</span>
+		</div>
+	)
+}
+
 function AddonRow({ addon }: { addon: AddonRecord }): React.JSX.Element {
 	return (
 		<div className={styles.addonRow}>
 			<div className={styles.addonState} data-enabled={String(addon.enabled)} />
+			<AddonThumbnail key={addon.id} addon={addon} />
 			<div className={styles.addonMain}>
 				<div className={styles.addonTitleLine}>
 					<strong>{addon.name}</strong>
@@ -531,19 +586,29 @@ export default function AddonManagerPage(): React.JSX.Element {
 	}
 
 	const gameFound = snapshot.detection.status === "found"
-	const path = groupPath(snapshot.groups, snapshot.preferences.selectedGroupId).join("  /  ")
 
 	return (
 		<div className={styles.page}>
 			<WinTitleBar
-				Title="L4D2 Addon Manager"
-				Subtitle={gameFound ? "Steam · AppID 550" : "未检测到游戏"}
+				PreferredHeightOption="Compact"
+				style={{ "--TitleBarCompactHeight": "38px" }}
+				LeftHeader={
+					<WinCommandBar
+						className={`${styles.commandBar} ${styles.titleBarCommandBar}`}
+						DefaultLabelPosition="Right"
+						HorizontalAlignment="Left"
+						PrimaryCommands={commandBarItems}
+					/>
+				}
 			/>
-			<WinCommandBar
-				className={styles.commandBar}
-				DefaultLabelPosition="Right"
-				PrimaryCommands={commandBarItems}
-			/>
+			<div className={styles.titleBarSearch}>
+				<WinTextBox
+					Value={search}
+					PlaceholderText="搜索名称、文件名或标签"
+					ShowDeleteButton
+					onUpdate:Value={setSearch}
+				/>
+			</div>
 
 			{notice && (
 				<WinInfoBar
@@ -563,15 +628,6 @@ export default function AddonManagerPage(): React.JSX.Element {
 				<div className={styles.workspace}>
 					<section className={styles.explorer}>
 						<div className={styles.explorerHeader}>
-							<div className={styles.virtualPath} title={path}>
-								{path}
-							</div>
-							<WinTextBox
-								Value={search}
-								PlaceholderText="搜索名称、文件名或标签"
-								ShowDeleteButton
-								onUpdate:Value={setSearch}
-							/>
 							<div className={styles.filters}>
 								<WinComboBox
 									ItemsSource={sourceOptions}

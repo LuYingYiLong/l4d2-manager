@@ -3,6 +3,7 @@ export const L4D2_APP_ID = 550
 export const L4D2_IPC_CHANNELS = {
 	detectGame: "l4d2:addons:detect-game",
 	getSnapshot: "l4d2:addons:get-snapshot",
+	getAddonImage: "l4d2:addons:get-addon-image",
 	refresh: "l4d2:addons:refresh",
 	setAddonEnabled: "l4d2:addons:set-enabled",
 	setAddonsEnabled: "l4d2:addons:set-many-enabled",
@@ -115,6 +116,7 @@ export interface AddonOperationProgress {
 export interface L4D2AddonApi {
 	detectGame(): Promise<GameDetectionResult>
 	getSnapshot(): Promise<AddonSnapshot>
+	getAddonImage(id: string): Promise<string | null>
 	refresh(): Promise<AddonSnapshot>
 	setAddonEnabled(id: string, enabled: boolean): Promise<AddonSnapshot>
 	setAddonsEnabled(ids: string[], enabled: boolean): Promise<AddonSnapshot>

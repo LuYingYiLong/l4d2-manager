@@ -20,10 +20,16 @@ export interface PersistedAddonState {
 	order: number
 }
 
+export interface WorkshopNameCacheEntry {
+	name: string | null
+	fetchedAt: string
+}
+
 export interface AddonStoreData {
 	version: 1
 	groups: AddonGroup[]
 	addons: Record<string, PersistedAddonState>
+	workshopNames: Record<string, WorkshopNameCacheEntry>
 	preferences: AddonPreferences
 	dirty: boolean
 	lastCheckedAt: string | null
@@ -87,6 +93,30 @@ function cleanAddon(value: unknown): PersistedAddonState | null {
 	}
 }
 
+function cleanWorkshopNames(value: unknown): Record<string, WorkshopNameCacheEntry> {
+	if (!value || typeof value !== "object") return {}
+
+	const result: Record<string, WorkshopNameCacheEntry> = {}
+	for (const [id, cacheValue] of Object.entries(value)) {
+		if (!/^\d{1,20}$/.test(id) || !cacheValue || typeof cacheValue !== "object") continue
+
+		const entry = cacheValue as Partial<WorkshopNameCacheEntry>
+		if (
+			(entry.name !== null && typeof entry.name !== "string") ||
+			typeof entry.fetchedAt !== "string" ||
+			!Number.isFinite(Date.parse(entry.fetchedAt))
+		)
+			continue
+
+		result[id] = {
+			name: typeof entry.name === "string" ? entry.name.trim() || null : null,
+			fetchedAt: entry.fetchedAt
+		}
+	}
+
+	return result
+}
+
 function cleanPreferences(value: unknown): AddonPreferences {
 	if (!value || typeof value !== "object") return { ...defaultPreferences }
 	const preferences = value as Partial<AddonPreferences>
@@ -135,6 +165,7 @@ function cleanStoreData(value: unknown): AddonStoreData {
 		version: 1,
 		groups,
 		addons,
+		workshopNames: cleanWorkshopNames(source.workshopNames),
 		preferences: cleanPreferences(source.preferences),
 		dirty: source.dirty === true,
 		lastCheckedAt: typeof source.lastCheckedAt === "string" ? source.lastCheckedAt : null,
@@ -147,6 +178,7 @@ export function createDefaultStoreData(): AddonStoreData {
 		version: 1,
 		groups: [],
 		addons: {},
+		workshopNames: {},
 		preferences: { ...defaultPreferences },
 		dirty: false,
 		lastCheckedAt: null,

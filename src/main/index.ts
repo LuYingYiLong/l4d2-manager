@@ -12,8 +12,8 @@ app.setName("L4D2 Addon Manager")
 function createWindow(): void {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
-		width: 1360,
-		height: 840,
+		width: 1200,
+		height: 720,
 		minWidth: 980,
 		minHeight: 640,
 		show: false,

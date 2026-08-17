@@ -73,6 +73,7 @@ export const WinScrollViewer = forwardRef<
 		clientWidth: 0,
 		clientHeight: 0
 	})
+	const [, setScrollRevision] = useState(0)
 	const [isScrolling, setIsScrolling] = useState(false)
 	const [isZooming, setIsZooming] = useState(false)
 	const isZoomingRef = useRef(false)
@@ -136,6 +137,7 @@ export const WinScrollViewer = forwardRef<
 			clientWidth: viewport.clientWidth,
 			clientHeight: viewport.clientHeight
 		})
+		setScrollRevision((revision) => revision + 1)
 	}
 	const maxScrollLeft = Math.max(0, metrics.scrollWidth - metrics.clientWidth)
 	const maxScrollTop = Math.max(0, metrics.scrollHeight - metrics.clientHeight)
@@ -167,27 +169,29 @@ export const WinScrollViewer = forwardRef<
 		return { start: 12, length: Math.max(30, extent - 24 - (crossBar ? 12 : 0)) }
 	}
 	const verticalThumbStyle: WinStyle = (() => {
+		const viewport = viewportRef.current
 		const track = getTrackMetrics("vertical")
-		const thumb = Math.max(
-			30,
-			(metrics.clientHeight / Math.max(1, metrics.scrollHeight)) * track.length
-		)
+		const scrollTop = viewport?.scrollTop ?? metrics.scrollTop
+		const scrollHeight = viewport?.scrollHeight ?? metrics.scrollHeight
+		const clientHeight = viewport?.clientHeight ?? metrics.clientHeight
+		const thumb = Math.max(30, (clientHeight / Math.max(1, scrollHeight)) * track.length)
 		const travel = Math.max(0, track.length - thumb)
 		return {
 			height: thumb,
-			transform: `translateY(${track.start + (metrics.scrollTop / Math.max(1, maxScrollTop)) * travel}px)`
+			transform: `translateY(${track.start + (scrollTop / Math.max(1, scrollHeight - clientHeight)) * travel}px)`
 		}
 	})()
 	const horizontalThumbStyle: WinStyle = (() => {
+		const viewport = viewportRef.current
 		const track = getTrackMetrics("horizontal")
-		const thumb = Math.max(
-			30,
-			(metrics.clientWidth / Math.max(1, metrics.scrollWidth)) * track.length
-		)
+		const scrollLeft = viewport?.scrollLeft ?? metrics.scrollLeft
+		const scrollWidth = viewport?.scrollWidth ?? metrics.scrollWidth
+		const clientWidth = viewport?.clientWidth ?? metrics.clientWidth
+		const thumb = Math.max(30, (clientWidth / Math.max(1, scrollWidth)) * track.length)
 		const travel = Math.max(0, track.length - thumb)
 		return {
 			width: thumb,
-			transform: `translateX(${track.start + (metrics.scrollLeft / Math.max(1, maxScrollLeft)) * travel}px)`
+			transform: `translateX(${track.start + (scrollLeft / Math.max(1, scrollWidth - clientWidth)) * travel}px)`
 		}
 	})()
 	const emitViewChanged = (intermediate: boolean) => {
@@ -706,6 +710,7 @@ export const WinScrollViewer = forwardRef<
 		const startCoordinate = orientation === "vertical" ? event.clientY : event.clientX
 		const startOffset = orientation === "vertical" ? viewport.scrollTop : viewport.scrollLeft
 		const cleanup = () => {
+			refreshMetrics()
 			document.removeEventListener("pointermove", move)
 			document.removeEventListener("pointerup", end)
 			document.removeEventListener("pointercancel", end)

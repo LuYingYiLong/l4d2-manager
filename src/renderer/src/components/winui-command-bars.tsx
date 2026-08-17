@@ -410,6 +410,8 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 	)
 	const [visiblePrimary, setVisiblePrimary] = useState(primaryCommands)
 	const [overflowPrimary, setOverflowPrimary] = useState<WinCommandBarCommand[]>([])
+	const overflowCalculation = useRef(0)
+	const measuredWidthRef = useRef<number | null>(null)
 	const open = localOpen
 	const labelPosition = props.DefaultLabelPosition ?? "Bottom"
 	const dynamicOverflow = props.IsDynamicOverflowEnabled !== false
@@ -421,12 +423,6 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 		setLocalOpen(next)
 		callback<boolean>(props, "onValueChange", "onUpdate:IsOpen")?.(next)
 	}
-	const showOverflow =
-		overflowVisibility !== "Collapsed" &&
-		(overflowVisibility === "Visible" ||
-			primaryCommands.length > 0 ||
-			secondaryCommands.length > 0 ||
-			overflowPrimary.length > 0)
 	const overflowItems = [
 		...overflowPrimary.map(commandBarMenuItem),
 		...(overflowPrimary.length && secondaryCommands.length
@@ -434,16 +430,61 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 			: []),
 		...secondaryCommands.map(commandBarMenuItem)
 	]
+	const showOverflow =
+		overflowVisibility !== "Collapsed" &&
+		overflowItems.length > 0 &&
+		(overflowVisibility === "Visible" ||
+			secondaryCommands.length > 0 ||
+			overflowPrimary.length > 0)
+	const renderOverflowButton =
+		overflowVisibility !== "Collapsed" &&
+		(overflowVisibility === "Visible" ||
+			secondaryCommands.length > 0 ||
+			(dynamicOverflow && primaryCommands.length > 0))
+	const applyOverflowPartition = (
+		visible: WinCommandBarCommand[],
+		overflow: WinCommandBarCommand[]
+	) => {
+		setVisiblePrimary((current) =>
+			current.length === visible.length &&
+			current.every((command, index) => command === visible[index])
+				? current
+				: visible
+		)
+		setOverflowPrimary((current) =>
+			current.length === overflow.length &&
+			current.every((command, index) => command === overflow[index])
+				? current
+				: overflow
+		)
+	}
 	const updateAnchor = () => setAnchorRect(overflowRef.current?.getBoundingClientRect() ?? null)
-	const calculateOverflow = () => {
-		setVisiblePrimary(primaryCommands)
-		setOverflowPrimary([])
-		if (!dynamicOverflow || overflowVisibility === "Collapsed") return
+	const calculateOverflow = (force = true) => {
+		const calculationId = ++overflowCalculation.current
+		if (!dynamicOverflow || overflowVisibility === "Collapsed") {
+			applyOverflowPartition(primaryCommands, [])
+			measuredWidthRef.current = null
+			return
+		}
 		const frame = globalThis.requestAnimationFrame
-		const measure = () => {
+		const measure = async () => {
+			if (calculationId !== overflowCalculation.current) return
 			const root = rootRef.current
 			const content = primaryRef.current
 			if (!root || !content) return
+			const rootWidth = root.clientWidth
+			if (
+				!force &&
+				measuredWidthRef.current !== null &&
+				Math.abs(measuredWidthRef.current - rootWidth) < 1
+			)
+				return
+			applyOverflowPartition(primaryCommands, [])
+			await new Promise<void>((resolve) => {
+				if (frame) frame(() => resolve())
+				else globalThis.setTimeout(resolve, 0)
+			})
+			if (calculationId !== overflowCalculation.current) return
 			const children = Array.from(content.children) as HTMLElement[]
 			if (!children.length) return
 			const contentWidth = children.reduce(
@@ -452,8 +493,12 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 			)
 			const alwaysNeedsOverflow =
 				secondaryCommands.length > 0 || overflowVisibility === "Visible"
-			if (!alwaysNeedsOverflow && contentWidth <= root.clientWidth - 4) return
-			const available = Math.max(0, root.clientWidth - 52)
+			const available = Math.max(0, root.clientWidth - (renderOverflowButton ? 52 : 0))
+			if (!alwaysNeedsOverflow && contentWidth <= available) {
+				applyOverflowPartition(primaryCommands, [])
+				measuredWidthRef.current = rootWidth
+				return
+			}
 			let width = 0
 			let visibleCount = 0
 			for (const child of children) {
@@ -468,22 +513,27 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 					"onDynamicOverflowItemsChanging",
 					"DynamicOverflowItemsChanging"
 				)?.(undefined)
-				setVisiblePrimary(primaryCommands.slice(0, visibleCount))
-				setOverflowPrimary(primaryCommands.slice(visibleCount))
+				applyOverflowPartition(
+					primaryCommands.slice(0, visibleCount),
+					primaryCommands.slice(visibleCount)
+				)
+			} else {
+				applyOverflowPartition(primaryCommands, [])
 			}
+			measuredWidthRef.current = rootWidth
 		}
-		if (frame) frame(measure)
-		else globalThis.setTimeout(measure, 0)
+		if (frame) frame(() => void measure())
+		else globalThis.setTimeout(() => void measure(), 0)
 	}
 	useEffect(() => {
-		calculateOverflow()
+		calculateOverflow(true)
 	}, [dynamicOverflow, overflowVisibility, labelPosition, primaryCommands, secondaryCommands])
 	useEffect(() => {
 		const root = rootRef.current
 		if (!root) return undefined
 		const observer =
 			typeof ResizeObserver !== "undefined"
-				? new ResizeObserver(calculateOverflow)
+				? new ResizeObserver(() => calculateOverflow(false))
 				: undefined
 		observer?.observe(root)
 		window.addEventListener("resize", updateAnchor)
@@ -597,18 +647,23 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 					{props.children ??
 						visiblePrimary.map((command, index) => renderCommand(command, index))}
 				</div>
-				{showOverflow && (
+				{renderOverflowButton && (
 					<button
 						ref={overflowRef}
 						type="button"
 						className={cx(
 							"commandbar-overflow-button",
+							!showOverflow ? "is-placeholder" : undefined,
 							overflowOpen ? "is-active" : undefined
 						)}
 						aria-label={open ? "Less options" : "More options"}
-						aria-expanded={open}
+						aria-expanded={showOverflow && open}
+						aria-hidden={!showOverflow}
+						tabIndex={showOverflow ? undefined : -1}
+						disabled={!showOverflow}
 						title={open ? "See less" : "See more"}
-						onClick={() => {
+						onClick={(event) => {
+							event.stopPropagation()
 							if (open) closeBar()
 							else openBar()
 						}}

@@ -7,6 +7,7 @@ import type { HTMLAttributes, ReactNode } from "react"
 import { WinTextBlock } from "./winui-primitives"
 import { WinTextBox } from "./winui-inputs"
 import { WinScrollViewer } from "./winui-scrolling"
+import { useFlyoutAnimation } from "./useFlyoutAnimation"
 import { callback, commonStyle, cx, domProps, itemLabel, itemsOf } from "./winui-shared"
 import type {
 	WinChangeProps,
@@ -16,6 +17,97 @@ import type {
 	WinStyle,
 	WinValue
 } from "./winui-shared"
+
+type ComboFlyoutDirection = "top" | "bottom"
+
+type ComboFlyoutRect = {
+	left: number
+	top: number
+	right: number
+	bottom: number
+}
+
+const comboFlyoutClamp = (value: number, min: number, max: number) =>
+	Math.max(min, Math.min(max, value))
+
+const comboFlyoutClipPath = (rect: ComboFlyoutRect) =>
+	`polygon(${rect.left}px ${rect.top}px, ${rect.right}px ${rect.top}px, ${rect.right}px ${rect.bottom}px, ${rect.left}px ${rect.bottom}px)`
+
+const getComboFlyoutStartRect = (
+	flyout: HTMLElement,
+	originElement: HTMLElement | null,
+	direction: ComboFlyoutDirection,
+	stripSize = 36
+): ComboFlyoutRect => {
+	const flyoutRect = flyout.getBoundingClientRect()
+	const width = flyoutRect.width
+	const height = flyoutRect.height
+	if (originElement) {
+		const originRect = originElement.getBoundingClientRect()
+		return {
+			left: comboFlyoutClamp(originRect.left - flyoutRect.left, 0, width),
+			top: comboFlyoutClamp(originRect.top - flyoutRect.top, 0, height),
+			right: comboFlyoutClamp(originRect.right - flyoutRect.left, 0, width),
+			bottom: comboFlyoutClamp(originRect.bottom - flyoutRect.top, 0, height)
+		}
+	}
+	if (direction === "bottom") {
+		return {
+			left: 0,
+			top: Math.max(0, height - stripSize),
+			right: width,
+			bottom: height
+		}
+	}
+	return {
+		left: 0,
+		top: 0,
+		right: width,
+		bottom: Math.min(height, stripSize)
+	}
+}
+
+const playComboFlyoutReveal = (
+	flyout: HTMLElement,
+	originElement: HTMLElement | null,
+	direction: ComboFlyoutDirection
+): Animation | undefined => {
+	if (typeof flyout.animate !== "function") {
+		flyout.style.clipPath = ""
+		return undefined
+	}
+	const width = flyout.getBoundingClientRect().width
+	const height = flyout.getBoundingClientRect().height
+	if (width <= 0 || height <= 0) return undefined
+	const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+	if (reducedMotion) {
+		flyout.style.clipPath = ""
+		return undefined
+	}
+	const startRect = getComboFlyoutStartRect(flyout, originElement, direction)
+	const endRect = {
+		left: -15,
+		top: -15,
+		right: width + 15,
+		bottom: height + 15
+	}
+	const startClipPath = comboFlyoutClipPath(startRect)
+	const endClipPath = comboFlyoutClipPath(endRect)
+	flyout.style.willChange = "clip-path"
+	flyout.style.clipPath = startClipPath
+	const animation = flyout.animate([{ clipPath: startClipPath }, { clipPath: endClipPath }], {
+		duration: 800,
+		easing: "cubic-bezier(0.092, 1.003, 0.028, 0.997)",
+		fill: "none"
+	})
+	const clearClipPath = () => {
+		flyout.style.clipPath = ""
+		flyout.style.willChange = ""
+	}
+	animation.onfinish = clearClipPath
+	animation.oncancel = clearClipPath
+	return animation
+}
 
 export function WinComboBox(
 	props: WinItemProps &
@@ -84,9 +176,35 @@ export function WinComboBox(
 	)
 	const [isEditing, setIsEditing] = useState(false)
 	const [highlightedIndex, setHighlightedIndex] = useState(-1)
+	const animation = useFlyoutAnimation(open, {
+		enterClass: "",
+		exitClass: "combo-flyout-closing"
+	})
+	const comboRevealRef = useRef<Animation | null>(null)
+	const pendingRevealRef = useRef(false)
 	const selectedItem = selected >= 0 ? items[selected] : undefined
 	const visibleIndexes = items.map((_, index) => index)
 	const enabled = props.IsEnabled !== false && props.disabled !== true
+	const cancelComboFlyoutReveal = () => {
+		comboRevealRef.current?.cancel()
+		comboRevealRef.current = null
+		if (flyoutRef.current) {
+			flyoutRef.current.style.clipPath = ""
+			flyoutRef.current.style.willChange = ""
+		}
+	}
+	const startComboFlyoutReveal = () => {
+		const flyout = flyoutRef.current
+		if (!flyout) return
+		cancelComboFlyoutReveal()
+		const selectedIndex = visibleIndexes.includes(selected)
+			? selected
+			: Math.floor(visibleIndexes.length / 2)
+		const originElement = props.IsEditable ? null : (itemRefs.current[selectedIndex] ?? null)
+		comboRevealRef.current =
+			playComboFlyoutReveal(flyout, originElement, position.opensUp ? "bottom" : "top") ??
+			null
+	}
 	const onInputKeyDownCapture = (event: React.KeyboardEvent<HTMLDivElement>) => {
 		setInputDeviceType("Keyboard")
 		if (event.key !== "Escape" || !open) return
@@ -114,6 +232,7 @@ export function WinComboBox(
 		)
 	}
 	const updatePosition = () => {
+		cancelComboFlyoutReveal()
 		const anchor = props.IsEditable ? editableRef.current : buttonRef.current
 		if (!anchor || typeof window === "undefined") return
 		const rect = anchor.getBoundingClientRect()
@@ -205,7 +324,15 @@ export function WinComboBox(
 	}
 	const setOpenState = (next: boolean) => {
 		if (!enabled || next === open) return
-		setFlyoutReady(false)
+		if (next) {
+			pendingRevealRef.current = true
+			animation.beginOpen()
+			setFlyoutReady(false)
+		} else {
+			pendingRevealRef.current = false
+			cancelComboFlyoutReveal()
+			animation.beginClose()
+		}
 		setOpen(next)
 		callback<boolean>(props, "onUpdate:IsDropDownOpen", "onUpdate:IsOpen")?.(next)
 		callback<unknown>(
@@ -254,14 +381,38 @@ export function WinComboBox(
 	])
 	useEffect(() => {
 		const externalOpen = props.IsDropDownOpen ?? props.IsOpen ?? props.Open
-		if (externalOpen !== undefined) setOpen(externalOpen)
+		if (externalOpen === undefined || externalOpen === open) return
+		if (externalOpen) {
+			pendingRevealRef.current = true
+			animation.beginOpen()
+			setFlyoutReady(false)
+		} else {
+			pendingRevealRef.current = false
+			cancelComboFlyoutReveal()
+			animation.beginClose()
+		}
+		setOpen(externalOpen)
 	}, [props.IsDropDownOpen, props.IsOpen, props.Open])
+	useEffect(() => {
+		if (!open || !flyoutReady || !pendingRevealRef.current) return undefined
+		pendingRevealRef.current = false
+		let firstFrame = 0
+		let secondFrame = 0
+		firstFrame = requestAnimationFrame(() => {
+			secondFrame = requestAnimationFrame(startComboFlyoutReveal)
+		})
+		return () => {
+			cancelAnimationFrame(firstFrame)
+			cancelAnimationFrame(secondFrame)
+		}
+	}, [flyoutReady, open])
 	useEffect(() => {
 		if (props.Text !== undefined && props.Text !== null) setCurrentText(String(props.Text))
 	}, [props.Text])
 	useEffect(() => {
 		if (!open) {
-			setFlyoutReady(false)
+			pendingRevealRef.current = false
+			cancelComboFlyoutReveal()
 			setHighlightedIndex(-1)
 			return undefined
 		}
@@ -614,7 +765,7 @@ export function WinComboBox(
 					/>
 				</button>
 			)}
-			{open &&
+			{animation.isRendered &&
 				typeof document !== "undefined" &&
 				createPortal(
 					<>
@@ -635,6 +786,7 @@ export function WinComboBox(
 								"win-theme-scope",
 								position.opensUp ? "opens-up" : "opens-down",
 								flyoutReady ? "is-positioned" : undefined,
+								flyoutReady ? animation.animationClass : undefined,
 								inputDeviceType === "Touch" ? "touch-input" : undefined,
 								props.IsEditable
 									? position.opensUp
@@ -649,13 +801,16 @@ export function WinComboBox(
 								left: position.left,
 								minWidth: position.width,
 								maxWidth: position.maxWidth,
-								height: position.maxHeight,
-								maxHeight: position.maxHeight,
+								height: position.maxHeight + 2,
+								maxHeight: position.maxHeight + 2,
 								width: "max-content",
 								visibility: flyoutReady ? "visible" : "hidden"
 							}}
 							onKeyDownCapture={onPopupKeyDown}
 							onPointerDown={(event) => event.stopPropagation()}
+							onAnimationEnd={(event) => {
+								if (event.target === event.currentTarget) animation.onAnimationEnd()
+							}}
 						>
 							<WinScrollViewer
 								className="win-combo-scroll-viewer"

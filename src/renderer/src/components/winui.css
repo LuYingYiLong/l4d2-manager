@@ -904,7 +904,6 @@
 	opacity: 0.6;
 	cursor: default;
 }
-.win-number-box input,
 .win-text-box-host input,
 .win-text-box-host textarea,
 .win-time-picker input,
@@ -1272,6 +1271,7 @@
 }
 .win-textbox-delete-glyph {
 	display: block;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
 	font-size: 12px;
 	line-height: 12px;
 }
@@ -1328,72 +1328,69 @@
 	flex-direction: column;
 	gap: 4px;
 }
-.win-number-header {
-	margin: 0 0 4px;
+.win-number-box {
+	min-width: 64px;
 }
 .win-number-shell,
-.win-number-field {
-	position: relative;
-	display: flex;
-	min-width: 0;
-}
-.win-number-input {
+.win-number-textbox {
 	width: 100%;
-	min-width: 64px;
-	font: inherit;
-	text-align: left;
 }
-.win-number-box.is-inline .win-number-input,
-.win-number-box.is-compact .win-number-input {
-	padding-right: 44px;
+.win-number-spin {
+	display: flex;
+	align-self: stretch;
+	color: var(--text-secondary);
 }
 .win-number-spin.inline {
-	position: absolute;
-	top: 1px;
-	right: 1px;
-	bottom: 1px;
-	display: flex;
-	width: 40px;
-	flex-direction: column;
-	border-left: 1px solid var(--ctrl-border);
+	flex-direction: row;
 }
-.win-number-spin.inline button,
-.win-number-compact-indicator {
+.win-number-spin-button {
 	display: grid;
-	min-width: 0;
-	min-height: 0;
-	flex: 1;
 	place-items: center;
+	min-width: 0;
 	padding: 0;
-	color: var(--text-secondary);
 	font: inherit;
-	font-size: 12px;
 	line-height: 1;
+	color: inherit;
 	background: transparent;
 	border: 0;
-	cursor: default;
-}
-.win-number-spin.inline button {
 	cursor: pointer;
 }
-.win-number-spin.inline button:hover,
+.win-number-spin-button:first-child {
+	width: 40px;
+	min-width: 40px;
+	flex: 0 0 40px;
+}
+.win-number-spin-button:last-child {
+	width: 36px;
+	min-width: 36px;
+	flex: 0 0 36px;
+}
+.win-number-spin-button span,
+.win-number-compact-indicator span,
+.win-number-popup-button span {
+	display: block;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 1;
+}
+.win-number-spin-button:hover,
 .win-number-compact-indicator:hover {
 	color: var(--text-primary);
 	background: var(--subtle-secondary);
 }
-.win-number-spin.inline button:disabled {
+.win-number-spin-button:disabled {
 	color: var(--text-disabled);
 	cursor: default;
 	background: transparent;
 }
 .win-number-compact-indicator {
-	position: absolute;
-	top: 1px;
-	right: 1px;
-	bottom: 1px;
+	align-self: stretch;
+	display: flex;
 	width: 40px;
-	flex: 0 0 40px;
-	border-left: 1px solid var(--ctrl-border);
+	min-width: 40px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
 	pointer-events: none;
 }
 .win-number-compact-popup {
@@ -1413,7 +1410,7 @@
 	box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
 	backdrop-filter: var(--flyout-backdrop);
 }
-.win-number-compact-popup button {
+.win-number-popup-button {
 	display: grid;
 	width: 36px;
 	height: 36px;
@@ -1421,17 +1418,19 @@
 	padding: 0;
 	color: var(--text-secondary);
 	font: inherit;
-	font-size: 16px;
 	background: transparent;
 	border: 0;
 	border-radius: 4px;
 	cursor: pointer;
 }
-.win-number-compact-popup button:hover {
+.win-number-popup-button span {
+	font-size: 16px;
+}
+.win-number-popup-button:hover {
 	color: var(--text-primary);
 	background: var(--subtle-secondary);
 }
-.win-number-compact-popup button:disabled {
+.win-number-popup-button:disabled {
 	color: var(--text-disabled);
 	cursor: default;
 }
@@ -1937,6 +1936,21 @@
 	border: var(--InfoBarBorderThickness, 1px) solid var(--InfoBarBorderBrush, var(--card-stroke));
 	border-radius: var(--InfoBarCornerRadius, 8px);
 	animation: flyout-enter var(--fast-duration, 167ms) var(--fast-out-slow-in, ease) both;
+}
+@keyframes flyout-enter {
+	from {
+		opacity: 0;
+		transform: translateY(-4px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-info-bar {
+		animation-duration: 0.001ms;
+	}
 }
 .win-info-bar.severity-informational {
 	--InfoBarBackground: color-mix(in srgb, var(--accent-base) 10%, var(--card-bg));
@@ -3084,21 +3098,21 @@
 }
 .scrollbar-vertical.expanded .scrollbar-thumb {
 	width: 12px;
-	transition-delay: 400ms, 400ms, 400ms, 400ms, 400ms, 0ms;
+	transition-delay: 400ms, 400ms, 400ms, 400ms, 0ms, 0ms;
 }
 .scrollbar-horizontal.expanded .scrollbar-thumb {
 	height: 12px;
-	transition-delay: 400ms, 400ms, 400ms, 400ms, 400ms, 0ms;
+	transition-delay: 400ms, 400ms, 400ms, 400ms, 0ms, 0ms;
 }
 .scrollbar-vertical.contracting .scrollbar-thumb {
 	right: 0;
 	width: 8px;
-	transition-delay: 500ms, 500ms, 500ms, 500ms, 500ms, 0ms;
+	transition-delay: 500ms, 500ms, 500ms, 500ms, 0ms, 0ms;
 }
 .scrollbar-horizontal.contracting .scrollbar-thumb {
 	bottom: 0;
 	height: 8px;
-	transition-delay: 500ms, 500ms, 500ms, 500ms, 500ms, 0ms;
+	transition-delay: 500ms, 500ms, 500ms, 500ms, 0ms, 0ms;
 }
 .scrollbar-thumb:hover::before {
 	background: var(--ScrollBarThumbFillPointerOver, var(--ctrl-strong-fill, rgba(0, 0, 0, 0.55)));
@@ -3117,6 +3131,7 @@
 	place-items: center;
 	padding: 0;
 	color: var(--ScrollBarButtonArrowForeground, var(--ctrl-strong-fill));
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
 	font-size: 8px;
 	line-height: 1;
 	background: transparent;
@@ -3925,7 +3940,7 @@
 	width: max-content;
 	min-width: 80px;
 	max-width: calc(100vw - 16px);
-	overflow: auto;
+	overflow: hidden;
 	color: var(--text-primary);
 	--win-acrylic-fill: var(--flyout-bg);
 	isolation: isolate;
@@ -3945,12 +3960,14 @@
 	width: 100%;
 	height: 100%;
 	min-height: 0;
+	max-height: inherit;
 }
 .win-combo-scroll-viewer .win-scroll-viewer-viewport {
 	height: 100%;
+	max-height: inherit;
 }
 .win-combo-scroll-viewer .scroll-content {
-	min-height: 100%;
+	min-width: 100%;
 }
 .win-combo-flyout.edge-square-top {
 	border-top-left-radius: 0;
@@ -4119,6 +4136,27 @@
 }
 .win-combo-flyout {
 	box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+@keyframes combo-flyout-exit {
+	from {
+		opacity: 1;
+		transform: scaleY(1);
+	}
+	to {
+		opacity: 0;
+		transform: scaleY(0.96);
+	}
+}
+.win-combo-flyout.combo-flyout-closing {
+	animation: combo-flyout-exit 100ms cubic-bezier(0.7, 0, 1, 0.5) both;
+}
+.win-combo-flyout.opens-up.combo-flyout-closing {
+	transform-origin: bottom center;
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-combo-flyout.combo-flyout-closing {
+		animation-duration: 0.001ms;
+	}
 }
 .win-calendar-date-picker,
 .win-date-picker {
@@ -5776,6 +5814,10 @@
 	content: "";
 	background: transparent;
 	border-radius: var(--ControlCornerRadius, 4px);
+}
+.commandbar-overflow-button.is-placeholder {
+	visibility: hidden;
+	pointer-events: none;
 }
 .commandbar-overflow-button:hover::before {
 	background: var(--subtle-secondary);

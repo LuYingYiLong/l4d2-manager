@@ -480,7 +480,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 		void perform(() => window.api.addons.updatePreferences(update), applySnapshot)
 	}
 
-	const check = (): void => {
+	const check = useCallback((): void => {
 		void perform(
 			() => window.api.addons.check(),
 			(result) => {
@@ -495,9 +495,9 @@ export default function AddonManagerPage(): React.JSX.Element {
 				})
 			}
 		)
-	}
+	}, [applySnapshot, perform])
 
-	const push = (): void => {
+	const push = useCallback((): void => {
 		void perform(
 			() => window.api.addons.push(),
 			(result) => {
@@ -513,7 +513,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 				})
 			}
 		)
-	}
+	}, [applySnapshot, perform])
 
 	const openGroupDialog = (mode: "create" | "rename" | "delete"): void => {
 		setGroupName(mode === "rename" ? (selectedGroup?.name ?? "") : "")
@@ -541,40 +541,43 @@ export default function AddonManagerPage(): React.JSX.Element {
 		}
 	}
 
-	const commandBarItems = [
-		{
-			Component: WinAppBarButton,
-			Props: {
-				Label: "打开目录",
-				Icon: "OpenFile",
-				IsEnabled: snapshot?.detection.status === "found" && !busy
+	const commandBarItems = useMemo(
+		() => [
+			{
+				Component: WinAppBarButton,
+				Props: {
+					Label: "打开目录",
+					Icon: "OpenFile",
+					IsEnabled: snapshot?.detection.status === "found" && !busy
+				},
+				Click: () => void window.api.addons.revealGameDirectory().catch(fail)
 			},
-			Click: () => void window.api.addons.revealGameDirectory().catch(fail)
-		},
-		{
-			Component: WinAppBarButton,
-			Props: {
-				Label: "检查",
-				Icon: "Refresh",
-				IsEnabled: snapshot?.detection.status === "found" && !busy
+			{
+				Component: WinAppBarButton,
+				Props: {
+					Label: "检查",
+					Icon: "Refresh",
+					IsEnabled: snapshot?.detection.status === "found" && !busy
+				},
+				Click: check
 			},
-			Click: check
-		},
-		{
-			Component: WinAppBarButton,
-			Props: {
-				Label: snapshot?.dirty ? "推送 · 待处理" : "推送",
-				Icon: "Send",
-				IsEnabled: snapshot?.detection.status === "found" && !busy
+			{
+				Component: WinAppBarButton,
+				Props: {
+					Label: snapshot?.dirty ? "推送 · 待处理" : "推送",
+					Icon: "Send",
+					IsEnabled: snapshot?.detection.status === "found" && !busy
+				},
+				Click: push
 			},
-			Click: push
-		},
-		{
-			Component: WinAppBarButton,
-			Props: { Label: "设置", Icon: "Setting", IsEnabled: !busy },
-			Click: () => setSettingsOpen(true)
-		}
-	]
+			{
+				Component: WinAppBarButton,
+				Props: { Label: "设置", Icon: "Setting", IsEnabled: !busy },
+				Click: () => setSettingsOpen(true)
+			}
+		],
+		[busy, check, fail, push, snapshot?.detection.status, snapshot?.dirty]
+	)
 
 	if (!snapshot) {
 		return (

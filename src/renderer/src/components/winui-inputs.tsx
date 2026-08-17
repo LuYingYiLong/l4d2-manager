@@ -409,7 +409,7 @@ export function WinNumberBox(
 	const updateCompactPopupPosition = () => {
 		const root = numberRootRef.current
 		if (!root || typeof window === "undefined") return
-		const anchor = root.querySelector<HTMLElement>(".win-number-field") ?? root
+		const anchor = root.querySelector<HTMLElement>(".win-textbox-border") ?? root
 		const rootRect = anchor.getBoundingClientRect()
 		const popupRect = compactPopupRef.current?.getBoundingClientRect()
 		const popupWidth = popupRect?.width ?? 48
@@ -513,6 +513,11 @@ export function WinNumberBox(
 		}
 		return resolved
 	}
+	const handleTextInput = (next: string) => {
+		const sanitized = sanitizeText(next)
+		setText(sanitized)
+		callback<string>(props, "onUpdate:Text")?.(sanitized)
+	}
 	const commitText = () => {
 		if (text.trim() === "") return setNumericValue(Number.NaN)
 		const parsed = parseText(text)
@@ -525,6 +530,36 @@ export function WinNumberBox(
 	const changeBy = (delta: number) => {
 		const committed = commitText()
 		setNumericValue((Number.isNaN(committed) ? 0 : committed) + delta, committed)
+	}
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+		if (
+			!event.ctrlKey &&
+			!event.metaKey &&
+			!event.altKey &&
+			event.key.length === 1 &&
+			sanitizeText(event.key) !== event.key
+		) {
+			event.preventDefault()
+			return
+		}
+		if (event.key === "Enter") {
+			event.preventDefault()
+			commitText()
+		} else if (event.key === "ArrowUp") {
+			event.preventDefault()
+			changeBy(event.shiftKey ? largeChange : smallChange)
+		} else if (event.key === "ArrowDown") {
+			event.preventDefault()
+			changeBy(event.shiftKey ? -largeChange : -smallChange)
+		} else if (event.key === "PageUp") {
+			event.preventDefault()
+			changeBy(largeChange)
+		} else if (event.key === "PageDown") {
+			event.preventDefault()
+			changeBy(-largeChange)
+		} else if (event.key === "Escape") {
+			setCompactOpen(false)
+		}
 	}
 	return (
 		<div
@@ -540,79 +575,45 @@ export function WinNumberBox(
 			id={typeof props.id === "string" ? props.id : undefined}
 			style={{ ...props.style, ...commonStyle(props) }}
 		>
-			{props.Header && <WinTextBlock className="win-number-header" Text={props.Header} />}
 			<div className="win-number-shell">
-				<div className="win-number-field">
-					<input
-						className="win-number-input"
-						type="text"
-						inputMode="decimal"
-						value={text}
-						placeholder={props.PlaceholderText}
-						disabled={props.IsEnabled === false}
-						aria-valuemin={Number.isFinite(minimum) ? minimum : undefined}
-						aria-valuemax={Number.isFinite(maximum) ? maximum : undefined}
-						style={{
-							textAlign: (props.TextAlignment ?? "Left").toLowerCase() as
-								"left" | "center" | "right"
-						}}
-						onFocus={() => placement === "compact" && setCompactOpen(true)}
-						onBlur={() => {
-							window.setTimeout(() => {
-								commitText()
-								setCompactOpen(false)
-							}, 120)
-						}}
-						onChange={(event) => {
-							const sanitized = sanitizeText(event.currentTarget.value)
-							setText(sanitized)
-							callback<string>(props, "onUpdate:Text")?.(sanitized)
-						}}
-						onKeyDown={(event) => {
-							if (
-								!event.ctrlKey &&
-								!event.metaKey &&
-								!event.altKey &&
-								event.key.length === 1 &&
-								sanitizeText(event.key) !== event.key
-							) {
-								event.preventDefault()
-								return
-							}
-							if (event.key === "Enter") {
-								event.preventDefault()
-								commitText()
-							} else if (event.key === "ArrowUp") {
-								event.preventDefault()
-								changeBy(event.shiftKey ? largeChange : smallChange)
-							} else if (event.key === "ArrowDown") {
-								event.preventDefault()
-								changeBy(event.shiftKey ? -largeChange : -smallChange)
-							} else if (event.key === "PageUp") {
-								event.preventDefault()
-								changeBy(largeChange)
-							} else if (event.key === "PageDown") {
-								event.preventDefault()
-								changeBy(-largeChange)
-							} else if (event.key === "Escape") {
-								setCompactOpen(false)
-							}
-						}}
-					/>
+				<WinTextBox
+					className="win-number-textbox"
+					Value={text}
+					Header={props.Header}
+					Description={props.Description}
+					PlaceholderText={props.PlaceholderText}
+					InputScope={props.InputScope ?? "Decimal"}
+					TextAlignment={props.TextAlignment}
+					IsEnabled={props.IsEnabled}
+					ShowDeleteButton={false}
+					onUpdate:Value={handleTextInput}
+					onFocus={() => placement === "compact" && setCompactOpen(true)}
+					onBlur={() => {
+						window.setTimeout(() => {
+							commitText()
+							setCompactOpen(false)
+						}, 120)
+					}}
+					onKeyDown={handleKeyDown}
+				>
 					{placement === "inline" && (
 						<div className="win-number-spin inline">
 							<button
+								className="win-textbox-action-button win-number-spin-button"
 								type="button"
 								aria-label="Increase"
 								disabled={!canIncrease}
+								onPointerDown={(event) => event.preventDefault()}
 								onClick={() => changeBy(smallChange)}
 							>
 								<span aria-hidden="true">{"\uE70E"}</span>
 							</button>
 							<button
+								className="win-textbox-action-button win-number-spin-button"
 								type="button"
 								aria-label="Decrease"
 								disabled={!canDecrease}
+								onPointerDown={(event) => event.preventDefault()}
 								onClick={() => changeBy(-smallChange)}
 							>
 								<span aria-hidden="true">{"\uE70D"}</span>
@@ -621,37 +622,36 @@ export function WinNumberBox(
 					)}
 					{placement === "compact" && (
 						<span className="win-number-compact-indicator" aria-hidden="true">
-							<span aria-hidden="true">{"\uE70E"}</span>
+							<span aria-hidden="true">{"\uEC8F"}</span>
 						</span>
 					)}
-				</div>
+				</WinTextBox>
 			</div>
-			{props.Description && (
-				<WinTextBlock className="win-number-description" Text={props.Description} />
-			)}
 			{placement === "compact" && compactOpen && typeof document !== "undefined"
 				? createPortal(
 						<div
 							ref={compactPopupRef}
-							className="win-number-compact-popup"
+							className="win-number-compact-popup win-theme-scope"
 							style={compactPopupPosition}
 							onPointerDown={(event) => event.preventDefault()}
 						>
 							<button
+								className="win-number-popup-button"
 								type="button"
 								aria-label="Increase"
 								disabled={!canIncrease}
 								onClick={() => changeBy(smallChange)}
 							>
-								{"\uE70E"}
+								<span aria-hidden="true">{"\uE70E"}</span>
 							</button>
 							<button
+								className="win-number-popup-button"
 								type="button"
 								aria-label="Decrease"
 								disabled={!canDecrease}
 								onClick={() => changeBy(-smallChange)}
 							>
-								{"\uE70D"}
+								<span aria-hidden="true">{"\uE70D"}</span>
 							</button>
 						</div>,
 						document.body

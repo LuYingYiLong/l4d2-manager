@@ -609,6 +609,7 @@ export function WinInfoBar(
 		Sync: "\uE895",
 		Warning: "\uF13C"
 	}
+	const systemIconFontFamily = '"Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif'
 	const decodeGlyph = (value: unknown): string => {
 		const glyph = String(value ?? "")
 		if (glyph.startsWith("\\u"))
@@ -631,7 +632,10 @@ export function WinInfoBar(
 		: typeof props.IconSource === "string"
 			? decodeGlyph(props.IconSource)
 			: ""
-	const iconFontFamily = String(iconRecord?.FontFamily ?? "WinUIOnWebIcons")
+	const iconFontFamily =
+		String(iconRecord?.FontFamily ?? "").trim() === "WinUIOnWebIcons"
+			? systemIconFontFamily
+			: String(iconRecord?.FontFamily ?? "").trim() || systemIconFontFamily
 	const iconForeground = String(iconRecord?.Foreground ?? "")
 	const hasBannerContent = Boolean(props.Title || props.Message || props.ActionButton)
 	const content = props.children ?? props.Content

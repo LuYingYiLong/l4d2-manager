@@ -2,12 +2,11 @@
 /* eslint-disable */
 
 import { createPortal } from "react-dom"
-import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type { HTMLAttributes, ReactNode } from "react"
 import { WinTextBlock } from "./winui-primitives"
 import { WinTextBox } from "./winui-inputs"
 import { WinScrollViewer } from "./winui-scrolling"
-import { useFlyoutAnimation } from "./useFlyoutAnimation"
 import { callback, commonStyle, cx, domProps, itemLabel, itemsOf } from "./winui-shared"
 import type {
 	WinChangeProps,
@@ -25,6 +24,34 @@ type ComboFlyoutRect = {
 	top: number
 	right: number
 	bottom: number
+}
+
+export type WinComboBoxProbePhase =
+	| "pointer-down"
+	| "pointer-up"
+	| "pointer-cancel"
+	| "click"
+	| "open-request"
+	| "open-state"
+	| "position-request"
+	| "position-run"
+	| "position-result"
+	| "reveal-queued"
+	| "reveal-frame"
+	| "reveal-start"
+	| "reveal-sample"
+	| "reveal-finish"
+	| "reveal-cancel"
+	| "reveal-skipped"
+
+export type WinComboBoxProbeEvent = {
+	sequence: number
+	elapsed: number
+	phase: WinComboBoxProbePhase
+	cycle: number
+	open: boolean
+	flyoutReady: boolean
+	detail?: Record<string, boolean | number | string | null>
 }
 
 const comboFlyoutClamp = (value: number, min: number, max: number) =>
@@ -94,18 +121,11 @@ const playComboFlyoutReveal = (
 	const startClipPath = comboFlyoutClipPath(startRect)
 	const endClipPath = comboFlyoutClipPath(endRect)
 	flyout.style.willChange = "clip-path"
-	flyout.style.clipPath = startClipPath
 	const animation = flyout.animate([{ clipPath: startClipPath }, { clipPath: endClipPath }], {
 		duration: 800,
 		easing: "cubic-bezier(0.092, 1.003, 0.028, 0.997)",
 		fill: "none"
 	})
-	const clearClipPath = () => {
-		flyout.style.clipPath = ""
-		flyout.style.willChange = ""
-	}
-	animation.onfinish = clearClipPath
-	animation.oncancel = clearClipPath
 	return animation
 }
 
@@ -121,6 +141,7 @@ export function WinComboBox(
 			IsEditable?: boolean
 			MaxDropDownHeight?: number
 			PlaceholderText?: string
+			DebugProbe?: (event: WinComboBoxProbeEvent) => void
 		}
 ): React.JSX.Element {
 	const items = useMemo(() => itemsOf(props), [props.ItemsSource, props.Items])
@@ -158,7 +179,7 @@ export function WinComboBox(
 					: -1)
 	const [selected, setSelected] = useState(initialSelectedIndex >= 0 ? initialSelectedIndex : -1)
 	const [open, setOpen] = useState(props.IsDropDownOpen ?? props.IsOpen ?? props.Open ?? false)
-	const [chevronClass, setChevronClass] = useState("")
+	const chevronRef = useRef<HTMLSpanElement>(null)
 	const chevronPressed = useRef(false)
 	const chevronPressDone = useRef(false)
 	const [position, setPosition] = useState({
@@ -169,6 +190,8 @@ export function WinComboBox(
 		opensUp: false,
 		maxWidth: 0
 	})
+	const positionRef = useRef(position)
+	const positionFrameRef = useRef<number | null>(null)
 	const [flyoutReady, setFlyoutReady] = useState(false)
 	const [inputDeviceType, setInputDeviceType] = useState<"Mouse" | "Touch" | "Keyboard">("Mouse")
 	const [currentText, setCurrentText] = useState(
@@ -176,34 +199,118 @@ export function WinComboBox(
 	)
 	const [isEditing, setIsEditing] = useState(false)
 	const [highlightedIndex, setHighlightedIndex] = useState(-1)
-	const animation = useFlyoutAnimation(open, {
-		enterClass: "",
-		exitClass: "combo-flyout-closing"
-	})
 	const comboRevealRef = useRef<Animation | null>(null)
+	const revealSampleFrameRef = useRef<number | null>(null)
 	const pendingRevealRef = useRef(false)
+	const revealCycleRef = useRef(0)
+	const revealScheduledCycleRef = useRef<number | null>(null)
+	const revealStartedCycleRef = useRef<number | null>(null)
+	const previousOpenRef = useRef(false)
+	const probeSequenceRef = useRef(0)
+	const probeStartedAtRef = useRef(
+		typeof performance === "undefined" ? Date.now() : performance.now()
+	)
 	const selectedItem = selected >= 0 ? items[selected] : undefined
 	const visibleIndexes = items.map((_, index) => index)
 	const enabled = props.IsEnabled !== false && props.disabled !== true
-	const cancelComboFlyoutReveal = () => {
-		comboRevealRef.current?.cancel()
-		comboRevealRef.current = null
-		if (flyoutRef.current) {
-			flyoutRef.current.style.clipPath = ""
-			flyoutRef.current.style.willChange = ""
-		}
+	const emitProbe = (phase: WinComboBoxProbePhase, detail?: WinComboBoxProbeEvent["detail"]) => {
+		if (!props.DebugProbe) return
+		const now = typeof performance === "undefined" ? Date.now() : performance.now()
+		probeSequenceRef.current += 1
+		props.DebugProbe({
+			sequence: probeSequenceRef.current,
+			elapsed: now - probeStartedAtRef.current,
+			phase,
+			cycle: revealCycleRef.current,
+			open,
+			flyoutReady,
+			detail
+		})
 	}
-	const startComboFlyoutReveal = () => {
+	const invalidateComboFlyoutReveal = () => {
+		revealCycleRef.current += 1
+		revealScheduledCycleRef.current = null
+		pendingRevealRef.current = false
+	}
+	const clearComboFlyoutClipPath = () => {
+		if (!flyoutRef.current) return
+		flyoutRef.current.style.clipPath = ""
+		flyoutRef.current.style.willChange = ""
+	}
+	const stopRevealSampling = () => {
+		if (revealSampleFrameRef.current === null) return
+		cancelAnimationFrame(revealSampleFrameRef.current)
+		revealSampleFrameRef.current = null
+	}
+	const cancelComboFlyoutReveal = (reason: string) => {
+		stopRevealSampling()
+		const current = comboRevealRef.current
+		comboRevealRef.current = null
+		if (current) {
+			current.cancel()
+			emitProbe("reveal-cancel", { reason })
+		}
+		clearComboFlyoutClipPath()
+	}
+	const startComboFlyoutReveal = (cycle = revealCycleRef.current) => {
+		if (cycle !== revealCycleRef.current || revealStartedCycleRef.current === cycle) return
 		const flyout = flyoutRef.current
 		if (!flyout) return
-		cancelComboFlyoutReveal()
+		revealStartedCycleRef.current = cycle
+		cancelComboFlyoutReveal("superseded-before-start")
 		const selectedIndex = visibleIndexes.includes(selected)
 			? selected
 			: Math.floor(visibleIndexes.length / 2)
 		const originElement = props.IsEditable ? null : (itemRefs.current[selectedIndex] ?? null)
-		comboRevealRef.current =
-			playComboFlyoutReveal(flyout, originElement, position.opensUp ? "bottom" : "top") ??
-			null
+		const current = playComboFlyoutReveal(
+			flyout,
+			originElement,
+			positionRef.current.opensUp ? "bottom" : "top"
+		)
+		if (!current) {
+			emitProbe("reveal-skipped", { reason: "animation-unavailable" })
+			return
+		}
+		comboRevealRef.current = current
+		emitProbe("reveal-start", {
+			direction: positionRef.current.opensUp ? "bottom" : "top",
+			selectedIndex,
+			animationCount: flyout.getAnimations().length
+		})
+		let lastSampleBucket = -1
+		let lastCurrentTime = -1
+		const sampleAnimation = () => {
+			if (comboRevealRef.current !== current) return
+			const currentTime = Number(current.currentTime ?? 0)
+			const sampleBucket = Math.min(4, Math.floor((currentTime / 800) * 4))
+			const timeWentBackwards = lastCurrentTime >= 0 && currentTime + 1 < lastCurrentTime
+			if (sampleBucket > lastSampleBucket || timeWentBackwards) {
+				lastSampleBucket = sampleBucket
+				emitProbe("reveal-sample", {
+					currentTime: Math.round(currentTime),
+					progress: Math.round((currentTime / 800) * 100),
+					animationCount: flyout.getAnimations().length,
+					timeWentBackwards
+				})
+			}
+			lastCurrentTime = currentTime
+			revealSampleFrameRef.current = requestAnimationFrame(sampleAnimation)
+		}
+		sampleAnimation()
+		current.onfinish = () => {
+			if (comboRevealRef.current !== current) return
+			comboRevealRef.current = null
+			stopRevealSampling()
+			clearComboFlyoutClipPath()
+			emitProbe("reveal-finish", { animationCount: flyout.getAnimations().length })
+		}
+		current.oncancel = () => {
+			if (comboRevealRef.current !== current) return
+			comboRevealRef.current = null
+			stopRevealSampling()
+			clearComboFlyoutClipPath()
+			emitProbe("reveal-cancel", { reason: "animation-cancelled-externally" })
+		}
 	}
 	const onInputKeyDownCapture = (event: React.KeyboardEvent<HTMLDivElement>) => {
 		setInputDeviceType("Keyboard")
@@ -215,6 +322,34 @@ export function WinComboBox(
 	}
 	const onPointerDownCapture = (event: React.PointerEvent<HTMLDivElement>) => {
 		setInputDeviceType(event.pointerType === "touch" ? "Touch" : "Mouse")
+		emitProbe("pointer-down", {
+			pointerType: event.pointerType,
+			button: event.button,
+			target:
+				event.target instanceof HTMLElement ? event.target.tagName.toLowerCase() : "unknown"
+		})
+	}
+	const onPointerUpCapture = (event: React.PointerEvent<HTMLDivElement>) => {
+		emitProbe("pointer-up", {
+			pointerType: event.pointerType,
+			button: event.button,
+			target:
+				event.target instanceof HTMLElement ? event.target.tagName.toLowerCase() : "unknown"
+		})
+	}
+	const onPointerCancelCapture = (event: React.PointerEvent<HTMLDivElement>) => {
+		emitProbe("pointer-cancel", {
+			pointerType: event.pointerType,
+			target:
+				event.target instanceof HTMLElement ? event.target.tagName.toLowerCase() : "unknown"
+		})
+	}
+	const onClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+		emitProbe("click", {
+			detail: event.detail,
+			target:
+				event.target instanceof HTMLElement ? event.target.tagName.toLowerCase() : "unknown"
+		})
 	}
 	const focusDisplay = () => {
 		if (props.IsEditable) displayRef.current?.focus()
@@ -231,10 +366,10 @@ export function WinComboBox(
 			Number.parseFloat(style.marginBottom || "0")
 		)
 	}
-	const updatePosition = () => {
-		cancelComboFlyoutReveal()
+	const updatePosition = (source = "direct") => {
 		const anchor = props.IsEditable ? editableRef.current : buttonRef.current
 		if (!anchor || typeof window === "undefined") return
+		emitProbe("position-run", { source })
 		const rect = anchor.getBoundingClientRect()
 		const maxPopupHeight = Math.min(props.MaxDropDownHeight ?? 504, window.innerHeight)
 		const itemCount = visibleIndexes.length
@@ -312,26 +447,56 @@ export function WinComboBox(
 		}
 		popupHeight = Math.max(rect.height, Math.min(popupHeight, maxPopupHeight))
 		const margin = 8
-		setPosition({
+		const nextPosition = {
 			top: popupTop,
 			left: Math.max(0, Math.min(window.innerWidth - rect.width, rect.left)),
 			width: rect.width,
 			maxHeight: popupHeight,
 			opensUp: popupTop < rect.top,
 			maxWidth: Math.max(0, window.innerWidth - margin * 2)
+		}
+		const previousPosition = positionRef.current
+		const positionChanged =
+			previousPosition.top !== nextPosition.top ||
+			previousPosition.left !== nextPosition.left ||
+			previousPosition.width !== nextPosition.width ||
+			previousPosition.maxHeight !== nextPosition.maxHeight ||
+			previousPosition.opensUp !== nextPosition.opensUp ||
+			previousPosition.maxWidth !== nextPosition.maxWidth
+		if (positionChanged && comboRevealRef.current)
+			cancelComboFlyoutReveal(`position-changed:${source}`)
+		positionRef.current = nextPosition
+		if (positionChanged) setPosition(nextPosition)
+		if (!flyoutReady) setFlyoutReady(true)
+		emitProbe("position-result", {
+			source,
+			changed: positionChanged,
+			top: Math.round(nextPosition.top),
+			left: Math.round(nextPosition.left),
+			height: Math.round(nextPosition.maxHeight)
 		})
-		setFlyoutReady(true)
+	}
+	const schedulePosition = (source: string) => {
+		const coalesced = positionFrameRef.current !== null
+		emitProbe("position-request", { source, coalesced })
+		if (typeof window === "undefined" || coalesced || !open) return
+		positionFrameRef.current = window.requestAnimationFrame(() => {
+			positionFrameRef.current = null
+			updatePosition(source)
+		})
 	}
 	const setOpenState = (next: boolean) => {
+		emitProbe("open-request", {
+			next,
+			accepted: enabled && next !== open
+		})
 		if (!enabled || next === open) return
 		if (next) {
-			pendingRevealRef.current = true
-			animation.beginOpen()
 			setFlyoutReady(false)
 		} else {
-			pendingRevealRef.current = false
-			cancelComboFlyoutReveal()
-			animation.beginClose()
+			invalidateComboFlyoutReveal()
+			cancelComboFlyoutReveal("close-request")
+			setFlyoutReady(false)
 		}
 		setOpen(next)
 		callback<boolean>(props, "onUpdate:IsDropDownOpen", "onUpdate:IsOpen")?.(next)
@@ -344,23 +509,38 @@ export function WinComboBox(
 	const onChevronDown = () => {
 		chevronPressed.current = true
 		chevronPressDone.current = false
-		setChevronClass("pressing")
+		const chevron = chevronRef.current
+		if (chevron) {
+			chevron.classList.remove("releasing")
+			chevron.classList.add("pressing")
+		}
 	}
 	const onChevronUp = () => {
 		if (!chevronPressed.current) return
 		releaseChevron()
 	}
 	const releaseChevron = () => {
-		if (chevronClass === "") return
+		if (!chevronPressed.current) return
 		chevronPressed.current = false
-		if (chevronPressDone.current) setChevronClass("releasing")
+		if (chevronPressDone.current) {
+			const chevron = chevronRef.current
+			chevron?.classList.remove("pressing")
+			chevron?.classList.add("releasing")
+		}
 	}
 	const onChevronAnimEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
-		if (chevronClass === "pressing" && event.animationName === "chevron-press") {
+		const chevron = event.currentTarget
+		if (chevron.classList.contains("pressing") && event.animationName === "chevron-press") {
 			chevronPressDone.current = true
-			if (!chevronPressed.current) setChevronClass("releasing")
-		} else if (chevronClass === "releasing" && event.animationName === "chevron-release") {
-			setChevronClass("")
+			if (!chevronPressed.current) {
+				chevron.classList.remove("pressing")
+				chevron.classList.add("releasing")
+			}
+		} else if (
+			chevron.classList.contains("releasing") &&
+			event.animationName === "chevron-release"
+		) {
+			chevron.classList.remove("releasing")
 			chevronPressDone.current = false
 		}
 	}
@@ -383,48 +563,63 @@ export function WinComboBox(
 		const externalOpen = props.IsDropDownOpen ?? props.IsOpen ?? props.Open
 		if (externalOpen === undefined || externalOpen === open) return
 		if (externalOpen) {
-			pendingRevealRef.current = true
-			animation.beginOpen()
 			setFlyoutReady(false)
 		} else {
-			pendingRevealRef.current = false
-			cancelComboFlyoutReveal()
-			animation.beginClose()
+			invalidateComboFlyoutReveal()
+			cancelComboFlyoutReveal("external-close")
+			setFlyoutReady(false)
 		}
 		setOpen(externalOpen)
 	}, [props.IsDropDownOpen, props.IsOpen, props.Open])
 	useEffect(() => {
-		if (!open || !flyoutReady || !pendingRevealRef.current) return undefined
-		pendingRevealRef.current = false
-		let firstFrame = 0
-		let secondFrame = 0
-		firstFrame = requestAnimationFrame(() => {
-			secondFrame = requestAnimationFrame(startComboFlyoutReveal)
-		})
-		return () => {
-			cancelAnimationFrame(firstFrame)
-			cancelAnimationFrame(secondFrame)
+		if (previousOpenRef.current === open) return
+		previousOpenRef.current = open
+		if (!open) {
+			emitProbe("open-state", { value: false })
+			return
 		}
+		revealCycleRef.current += 1
+		revealScheduledCycleRef.current = null
+		revealStartedCycleRef.current = null
+		pendingRevealRef.current = true
+		emitProbe("open-state", { value: true })
+	}, [open])
+	useLayoutEffect(() => {
+		if (!open || !flyoutReady || !pendingRevealRef.current) return undefined
+		const cycle = revealCycleRef.current
+		if (revealScheduledCycleRef.current === cycle) return undefined
+		revealScheduledCycleRef.current = cycle
+		pendingRevealRef.current = false
+		emitProbe("reveal-queued")
+		emitProbe("reveal-frame", { frame: 0, phase: "layout" })
+		startComboFlyoutReveal(cycle)
+		return undefined
 	}, [flyoutReady, open])
 	useEffect(() => {
 		if (props.Text !== undefined && props.Text !== null) setCurrentText(String(props.Text))
 	}, [props.Text])
 	useEffect(() => {
 		if (!open) {
+			if (positionFrameRef.current !== null) {
+				cancelAnimationFrame(positionFrameRef.current)
+				positionFrameRef.current = null
+			}
 			pendingRevealRef.current = false
-			cancelComboFlyoutReveal()
+			cancelComboFlyoutReveal("closed-effect")
+			setFlyoutReady(false)
 			setHighlightedIndex(-1)
 			return undefined
 		}
 		setHighlightedIndex(
 			visibleIndexes.includes(selected) ? selected : (visibleIndexes[0] ?? -1)
 		)
-		updatePosition()
+		updatePosition("open-effect")
 		const focusFrame = requestAnimationFrame(() => {
 			const index = visibleIndexes.includes(selected) ? selected : (visibleIndexes[0] ?? -1)
 			if (!props.IsEditable && index >= 0) itemRefs.current[index]?.focus()
 		})
-		const onViewportChanged = () => updatePosition()
+		const onWindowResize = () => schedulePosition("window-resize")
+		const onWindowScroll = () => schedulePosition("window-scroll")
 		const onDocumentKeyDown = (event: globalThis.KeyboardEvent) => {
 			if (event.key === "Escape") {
 				event.preventDefault()
@@ -443,17 +638,23 @@ export function WinComboBox(
 			setOpenState(false)
 			setIsEditing(false)
 		}
-		window.addEventListener("resize", onViewportChanged)
-		window.addEventListener("scroll", onViewportChanged, true)
+		window.addEventListener("resize", onWindowResize)
+		window.addEventListener("scroll", onWindowScroll, true)
 		document.addEventListener("keydown", onDocumentKeyDown, true)
 		document.addEventListener("pointerdown", onDocumentPointerDown, true)
 		const observer =
-			typeof ResizeObserver !== "undefined" ? new ResizeObserver(updatePosition) : undefined
+			typeof ResizeObserver !== "undefined"
+				? new ResizeObserver(() => schedulePosition("resize-observer"))
+				: undefined
 		if (observer && comboRef.current) observer.observe(comboRef.current)
 		return () => {
 			cancelAnimationFrame(focusFrame)
-			window.removeEventListener("resize", onViewportChanged)
-			window.removeEventListener("scroll", onViewportChanged, true)
+			if (positionFrameRef.current !== null) {
+				cancelAnimationFrame(positionFrameRef.current)
+				positionFrameRef.current = null
+			}
+			window.removeEventListener("resize", onWindowResize)
+			window.removeEventListener("scroll", onWindowScroll, true)
 			document.removeEventListener("keydown", onDocumentKeyDown, true)
 			document.removeEventListener("pointerdown", onDocumentPointerDown, true)
 			observer?.disconnect()
@@ -650,6 +851,9 @@ export function WinComboBox(
 			style={{ ...props.style, ...commonStyle(props) }}
 			onKeyDownCapture={onInputKeyDownCapture}
 			onPointerDownCapture={onPointerDownCapture}
+			onPointerUpCapture={onPointerUpCapture}
+			onPointerCancelCapture={onPointerCancelCapture}
+			onClickCapture={onClickCapture}
 		>
 			{props.Header && <WinTextBlock Text={props.Header} className="win-combo-header" />}
 			{props.IsEditable ? (
@@ -722,7 +926,8 @@ export function WinComboBox(
 						onPointerLeave={releaseChevron}
 					/>
 					<span
-						className={cx("chevron-animate", "win-combo-chevron", chevronClass)}
+						ref={chevronRef}
+						className="chevron-animate win-combo-chevron"
 						aria-hidden="true"
 						onAnimationEnd={onChevronAnimEnd}
 					/>
@@ -759,13 +964,14 @@ export function WinComboBox(
 							: getLabel(selectedItem)}
 					</span>
 					<span
-						className={cx("chevron-animate", "win-combo-chevron", chevronClass)}
+						ref={chevronRef}
+						className="chevron-animate win-combo-chevron"
 						aria-hidden="true"
 						onAnimationEnd={onChevronAnimEnd}
 					/>
 				</button>
 			)}
-			{animation.isRendered &&
+			{open &&
 				typeof document !== "undefined" &&
 				createPortal(
 					<>
@@ -786,7 +992,6 @@ export function WinComboBox(
 								"win-theme-scope",
 								position.opensUp ? "opens-up" : "opens-down",
 								flyoutReady ? "is-positioned" : undefined,
-								flyoutReady ? animation.animationClass : undefined,
 								inputDeviceType === "Touch" ? "touch-input" : undefined,
 								props.IsEditable
 									? position.opensUp
@@ -808,9 +1013,6 @@ export function WinComboBox(
 							}}
 							onKeyDownCapture={onPopupKeyDown}
 							onPointerDown={(event) => event.stopPropagation()}
-							onAnimationEnd={(event) => {
-								if (event.target === event.currentTarget) animation.onAnimationEnd()
-							}}
 						>
 							<WinScrollViewer
 								className="win-combo-scroll-viewer"

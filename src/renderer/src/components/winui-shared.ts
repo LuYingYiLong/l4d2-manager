@@ -228,6 +228,7 @@ export const internalProps = new Set([
 	"IsEditable",
 	"MaxDropDownHeight",
 	"PlaceholderText",
+	"DebugProbe",
 	"QueryIcon",
 	"TextMemberPath",
 	"UpdateTextOnSelect",

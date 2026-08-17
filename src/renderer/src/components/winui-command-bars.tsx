@@ -412,6 +412,7 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 	const [overflowPrimary, setOverflowPrimary] = useState<WinCommandBarCommand[]>([])
 	const overflowCalculation = useRef(0)
 	const measuredWidthRef = useRef<number | null>(null)
+	const commandWidthsRef = useRef<Record<number, number>>({})
 	const open = localOpen
 	const labelPosition = props.DefaultLabelPosition ?? "Bottom"
 	const dynamicOverflow = props.IsDynamicOverflowEnabled !== false
@@ -479,18 +480,40 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 				Math.abs(measuredWidthRef.current - rootWidth) < 1
 			)
 				return
-			applyOverflowPartition(primaryCommands, [])
-			await new Promise<void>((resolve) => {
-				if (frame) frame(() => resolve())
-				else globalThis.setTimeout(resolve, 0)
-			})
+			const readCommandWidths = () => {
+				const commandElements = Array.from(
+					content.querySelectorAll<HTMLElement>("[data-command-index]")
+				)
+				for (const element of commandElements) {
+					const index = Number(element.dataset.commandIndex)
+					if (Number.isInteger(index) && index >= 0)
+						commandWidthsRef.current[index] = element.getBoundingClientRect().width
+				}
+				return primaryCommands.map((_, index) => commandWidthsRef.current[index])
+			}
+			let commandWidths = readCommandWidths()
+			if (
+				commandWidths.some((width) => width === undefined) &&
+				content.querySelectorAll("[data-command-index]").length < primaryCommands.length
+			) {
+				applyOverflowPartition(primaryCommands, [])
+				await new Promise<void>((resolve) => {
+					if (frame) frame(() => resolve())
+					else globalThis.setTimeout(resolve, 0)
+				})
+				if (calculationId !== overflowCalculation.current) return
+				commandWidths = readCommandWidths()
+			}
 			if (calculationId !== overflowCalculation.current) return
 			const children = Array.from(content.children) as HTMLElement[]
 			if (!children.length) return
-			const contentWidth = children.reduce(
-				(total, child) => total + child.getBoundingClientRect().width,
-				0
-			)
+			const hasCompleteCommandWidths =
+				commandWidths.every((width): width is number => width !== undefined) &&
+				primaryCommands.length > 0
+			const measuredChildren = hasCompleteCommandWidths
+				? commandWidths
+				: children.map((child) => child.getBoundingClientRect().width)
+			const contentWidth = measuredChildren.reduce((total, width) => total + width, 0)
 			const alwaysNeedsOverflow =
 				secondaryCommands.length > 0 || overflowVisibility === "Visible"
 			const available = Math.max(0, root.clientWidth - (renderOverflowButton ? 52 : 0))
@@ -501,8 +524,7 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 			}
 			let width = 0
 			let visibleCount = 0
-			for (const child of children) {
-				const childWidth = child.getBoundingClientRect().width
+			for (const childWidth of measuredChildren) {
 				if (width + childWidth > available) break
 				width += childWidth
 				visibleCount += 1
@@ -525,6 +547,10 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 		if (frame) frame(() => void measure())
 		else globalThis.setTimeout(() => void measure(), 0)
 	}
+	useEffect(() => {
+		commandWidthsRef.current = {}
+		measuredWidthRef.current = null
+	}, [labelPosition, primaryCommands])
 	useEffect(() => {
 		calculateOverflow(true)
 	}, [dynamicOverflow, overflowVisibility, labelPosition, primaryCommands, secondaryCommands])
@@ -589,13 +615,19 @@ export function WinCommandBar(props: WinCommandBarProps): React.JSX.Element {
 	const renderCommand = (command: WinCommandBarCommand, index: number, prefix = "primary") => {
 		const Component = command.Component ?? WinAppBarButton
 		const commandProps = command.Props ?? {}
+		const commandIndex = prefix === "primary" ? primaryCommands.indexOf(command) : index
 		return (
-			<Component
+			<span
 				key={command.Key ?? `${prefix}-${index}`}
-				{...commandProps}
-				LabelPosition={labelPosition === "Bottom" ? "Default" : labelPosition}
-				Click={(event: MouseEvent<HTMLElement>) => invokeCommand(command, event)}
-			/>
+				className="commandbar-command-slot"
+				data-command-index={commandIndex >= 0 ? commandIndex : undefined}
+			>
+				<Component
+					{...commandProps}
+					LabelPosition={labelPosition === "Bottom" ? "Default" : labelPosition}
+					Click={(event: MouseEvent<HTMLElement>) => invokeCommand(command, event)}
+				/>
+			</span>
 		)
 	}
 	return (

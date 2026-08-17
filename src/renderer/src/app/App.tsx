@@ -1,8 +1,7 @@
-import { WinButton } from "../components"
-import "./App.module.css"
+import AddonManagerPage from "../features/addons/AddonManagerPage"
 
 function App(): React.JSX.Element {
-	return <WinButton>你好</WinButton>
+	return <AddonManagerPage />
 }
 
 export default App

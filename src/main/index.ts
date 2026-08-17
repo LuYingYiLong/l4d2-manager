@@ -1,32 +1,50 @@
-import { app, shell, BrowserWindow, ipcMain } from "electron"
+import { app, shell, BrowserWindow } from "electron"
 import { join } from "path"
 import { electronApp, optimizer, is } from "@electron-toolkit/utils"
 import icon from "../../resources/icon.png?asset"
+import { registerAddonIpc } from "./ipc/addon-ipc"
+import { AddonManager } from "./services/addon-manager"
+
+let mainWindow: BrowserWindow | null = null
+
+app.setName("L4D2 Addon Manager")
 
 function createWindow(): void {
 	// Create the browser window.
-	const mainWindow = new BrowserWindow({
-		width: 900,
-		height: 670,
+	mainWindow = new BrowserWindow({
+		width: 1360,
+		height: 840,
+		minWidth: 980,
+		minHeight: 640,
 		show: false,
 		autoHideMenuBar: true,
+		title: "L4D2 Addon Manager",
 		titleBarStyle: "hidden",
-		titleBarOverlay: {
-			color: "#ffffff00",
-			symbolColor: "#ffffff00",
-			height: 60
-		},
-		...(process.platform !== "darwin" ? { titleBarOverlay: true } : {}),
+		...(process.platform === "win32"
+			? {
+					titleBarOverlay: {
+						color: "#00000000",
+						symbolColor: "#ffffff",
+						height: 48
+					}
+				}
+			: {}),
 		...(process.platform === "linux" ? { icon } : {}),
 		backgroundMaterial: process.platform === "win32" ? "tabbed" : "auto",
 		webPreferences: {
 			preload: join(__dirname, "../preload/index.js"),
+			contextIsolation: true,
+			nodeIntegration: false,
 			sandbox: false
 		}
 	})
 
 	mainWindow.on("ready-to-show", () => {
-		mainWindow.show()
+		mainWindow?.show()
+	})
+
+	mainWindow.on("closed", () => {
+		mainWindow = null
 	})
 
 	mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -46,9 +64,9 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
 	// Set app user model id for windows
-	electronApp.setAppUserModelId("com.electron")
+	electronApp.setAppUserModelId("com.l4d2-manager.app")
 
 	// Default open or close DevTools by F12 in development
 	// and ignore CommandOrControl + R in production.
@@ -57,8 +75,9 @@ app.whenReady().then(() => {
 		optimizer.watchWindowShortcuts(window)
 	})
 
-	// IPC test
-	ipcMain.on("ping", () => console.log("pong"))
+	const addonManager = new AddonManager(app.getPath("userData"))
+	await addonManager.initialize()
+	registerAddonIpc(addonManager, () => mainWindow)
 
 	createWindow()
 

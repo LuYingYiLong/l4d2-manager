@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: l4d2-manager
+appId: com.l4d2-manager.app
+productName: L4D2 Addon Manager
 directories:
     buildResources: build
 files:

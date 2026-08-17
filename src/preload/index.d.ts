@@ -1,8 +1,9 @@
-import { ElectronAPI } from "@electron-toolkit/preload"
+import type { L4D2AddonApi } from "../shared/addon-types"
 
 declare global {
 	interface Window {
-		electron: ElectronAPI
-		api: unknown
+		api: {
+			addons: L4D2AddonApi
+		}
 	}
 }

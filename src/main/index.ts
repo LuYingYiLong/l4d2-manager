@@ -10,6 +10,13 @@ function createWindow(): void {
 		height: 670,
 		show: false,
 		autoHideMenuBar: true,
+		titleBarStyle: "hidden",
+		titleBarOverlay: {
+			color: "#ffffff00",
+			symbolColor: "#ffffff00",
+			height: 60
+		},
+		...(process.platform !== "darwin" ? { titleBarOverlay: true } : {}),
 		...(process.platform === "linux" ? { icon } : {}),
 		backgroundMaterial: process.platform === "win32" ? "tabbed" : "auto",
 		webPreferences: {

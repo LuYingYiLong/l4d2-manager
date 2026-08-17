@@ -7,9 +7,7 @@
 	min-width: 760px;
 	padding-top: 38px;
 	color: var(--TextFillColorPrimary);
-	background:
-		radial-gradient(circle at 78% 4%, rgb(0 120 212 / 8%), transparent 32%),
-		var(--LayerFillColorDefault);
+	background: var(--LayerFillColorDefault);
 	overflow: hidden;
 }
 
@@ -73,7 +71,7 @@
 }
 
 .infoBar {
-	margin: 8px 12px 0;
+	margin: 8px 16px 0;
 }
 
 .workspace {
@@ -81,7 +79,10 @@
 	grid-template-columns: minmax(470px, 2fr) minmax(310px, 1fr);
 	min-height: 0;
 	margin-top: 8px;
-	border-top: 1px solid var(--DividerStrokeColorDefault);
+	border: 1px solid var(--DividerStrokeColorDefault);
+	border-radius: 8px;
+	background: var(--LayerFillColorDefault);
+	overflow: hidden;
 }
 
 .explorer {
@@ -94,41 +95,45 @@
 
 .explorerHeader {
 	display: block;
-	padding: 0 12px;
+	padding: 12px 16px 16px;
 	border-bottom: 1px solid var(--DividerStrokeColorDefault);
 	background: var(--LayerFillColorAlt);
 }
 
 .filters {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(110px, 1fr)) 34px;
-	gap: 7px;
+	grid-template-columns: repeat(4, minmax(0, 1fr)) 36px;
+	gap: 8px;
 }
 
 .sortButton {
-	min-width: 34px;
+	min-width: 36px;
+	min-height: 32px;
 	padding-inline: 0;
 	font-size: 18px;
 }
 
 .titleBarSearch {
 	position: absolute;
-	inset: 0 0 auto;
+	top: 0;
+	left: 50%;
 	z-index: 10000;
 	display: flex;
-	width: 100%;
+	width: clamp(240px, 34vw, 420px);
 	height: 38px;
 	min-width: 0;
 	align-items: center;
-	justify-content: center;
 	pointer-events: none;
 	-webkit-app-region: no-drag;
 	app-region: no-drag;
+	transform: translateX(-50%);
 }
 
 .titleBarSearch :global(.win-textbox) {
-	width: clamp(240px, 34vw, 420px);
+	width: 100%;
 	pointer-events: auto;
+	-webkit-app-region: no-drag;
+	app-region: no-drag;
 }
 
 .titleBarSearch :global(input),
@@ -163,15 +168,15 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	min-height: 42px;
-	padding: 7px 10px 7px 14px;
+	min-height: 44px;
+	padding: 8px 12px 8px 16px;
 	border-bottom: 1px solid var(--DividerStrokeColorDefault);
 	background: var(--LayerFillColorAlt);
 }
 
 .paneHeading > div {
 	display: flex;
-	gap: 2px;
+	gap: 4px;
 }
 
 .paneHeading button {
@@ -183,6 +188,10 @@
 	border: 0;
 	border-radius: 4px;
 	background: transparent;
+	cursor: pointer;
+	transition:
+		color 120ms ease,
+		background-color 120ms ease;
 }
 
 .paneHeading button:hover:not(:disabled) {
@@ -194,6 +203,12 @@
 	opacity: 0.35;
 }
 
+.paneHeading button:focus-visible,
+.sortButton:focus-visible {
+	outline: 2px solid var(--FocusStrokeColorOuterBrush, var(--TextFillColorPrimary));
+	outline-offset: 2px;
+}
+
 .listPane {
 	background: var(--SolidBackgroundFillColorBase);
 }
@@ -202,22 +217,46 @@
 	padding-inline: 16px;
 }
 
+.paneHeading > strong,
+.listHeading > strong {
+	font-size: 14px;
+	font-weight: 600;
+}
+
 .listHeading span {
 	color: var(--TextFillColorSecondary);
 	font-size: 12px;
 }
 
 .addonList {
-	height: calc(100% - 42px);
+	height: calc(100% - 44px);
+	background: transparent;
+}
+
+.addonList :global(.win-list-content) {
+	padding: 8px 12px 16px;
+}
+
+.addonList :global(.win-items-view-layout) {
+	gap: 4px;
+}
+
+.addonList :global(.win-items-view-item) {
+	padding: 0;
+	border-radius: 8px;
+}
+
+.addonList :global(.win-items-view-item:hover) {
+	background: var(--SubtleFillColorSecondary);
 }
 
 .addonRow {
 	display: grid;
 	grid-template-columns: 4px 48px minmax(0, 1fr);
-	gap: 11px;
+	gap: 12px;
 	width: 100%;
 	min-width: 0;
-	padding: 9px 8px 9px 3px;
+	padding: 10px 12px;
 }
 
 .addonState {
@@ -308,9 +347,9 @@
 	flex: none;
 	padding: 1px 6px;
 	color: var(--TextFillColorSecondary);
-	font-size: 11px;
-	line-height: 18px;
-	border-radius: 999px;
+	font-size: 12px;
+	line-height: 16px;
+	border-radius: 4px;
 	background: var(--SubtleFillColorSecondary);
 }
 
@@ -327,7 +366,8 @@
 	margin-top: 2px;
 	overflow: hidden;
 	color: var(--TextFillColorTertiary);
-	font-size: 11px;
+	font-size: 12px;
+	line-height: 16px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
@@ -336,20 +376,21 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 6px;
-	margin-top: 5px;
+	gap: 8px;
+	margin-top: 4px;
 	color: var(--TextFillColorSecondary);
-	font-size: 11px;
+	font-size: 12px;
 }
 
 .details {
-	background: var(--LayerFillColorDefault);
+	background: var(--LayerFillColorAlt);
 }
 
 .detailsContent {
 	display: grid;
-	gap: 18px;
-	padding: 22px;
+	align-content: start;
+	min-height: 100%;
+	padding: 20px 20px 24px;
 }
 
 .detailsHeading {
@@ -357,28 +398,31 @@
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 16px;
+	padding-bottom: 16px;
 }
 
 .detailsHeading h1,
 .emptyDetails h2,
 .notFound h1 {
 	margin: 3px 0 0;
-	font-size: 22px;
+	font-size: 20px;
 	font-weight: 600;
-	line-height: 1.25;
+	line-height: 28px;
 }
 
 .eyebrow {
 	color: var(--AccentTextFillColorPrimary);
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
+	line-height: 16px;
 	letter-spacing: 0.09em;
 }
 
 .detailSection {
 	display: grid;
-	gap: 10px;
+	gap: 8px;
 	padding-top: 16px;
+	margin-top: 16px;
 	border-top: 1px solid var(--DividerStrokeColorDefault);
 }
 
@@ -391,15 +435,16 @@
 .detailSection label,
 .dialogBody label {
 	display: grid;
-	gap: 5px;
+	gap: 8px;
 	color: var(--TextFillColorSecondary);
 	font-size: 12px;
+	line-height: 16px;
 }
 
 .twoColumns {
 	display: grid;
 	grid-template-columns: 0.72fr 1.28fr;
-	gap: 10px;
+	gap: 12px;
 }
 
 .buttonRow {
@@ -410,34 +455,41 @@
 
 .propertyList {
 	display: grid;
-	gap: 8px;
+	gap: 12px;
 	margin: 0;
 }
 
 .propertyList div {
 	display: grid;
-	grid-template-columns: 82px minmax(0, 1fr);
-	gap: 10px;
+	grid-template-columns: 88px minmax(0, 1fr);
+	gap: 12px;
 }
 
 .propertyList dt {
 	color: var(--TextFillColorSecondary);
+	font-size: 12px;
 }
 
 .propertyList dd {
 	min-width: 0;
 	margin: 0;
 	overflow-wrap: anywhere;
+	font-size: 12px;
+	line-height: 18px;
 }
 
 .muted {
 	margin: 0;
 	color: var(--TextFillColorSecondary);
+	font-size: 12px;
+	line-height: 18px;
 }
 
 .healthy {
 	margin: 0;
 	color: var(--SystemFillColorSuccess);
+	font-size: 12px;
+	line-height: 18px;
 }
 
 .issueList {
@@ -456,16 +508,27 @@
 	place-content: center;
 	justify-items: center;
 	height: 100%;
-	padding: 40px;
+	padding: 32px;
 	color: var(--TextFillColorSecondary);
 	text-align: center;
+}
+
+.emptyDetails {
+	box-sizing: border-box;
+	min-height: 100%;
+}
+
+.emptyList {
+	min-height: 240px;
 }
 
 .emptyDetails p,
 .emptyList p,
 .notFound p {
-	max-width: 430px;
+	max-width: 360px;
 	margin: 8px 0 18px;
+	font-size: 12px;
+	line-height: 18px;
 }
 
 .emptyGlyph,
@@ -491,16 +554,17 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
-	padding: 0 12px;
+	min-height: 28px;
+	padding: 0 16px;
 	color: var(--TextFillColorSecondary);
-	font-size: 11px;
+	font-size: 12px;
 	border-top: 1px solid var(--DividerStrokeColorDefault);
 	background: var(--LayerFillColorAlt);
 }
 
 .dialogBody {
 	display: grid;
-	gap: 14px;
+	gap: 16px;
 	min-width: min(520px, 70vw);
 }
 
@@ -514,7 +578,7 @@
 	}
 
 	.filters {
-		grid-template-columns: repeat(2, minmax(130px, 1fr)) 34px;
+		grid-template-columns: repeat(2, minmax(130px, 1fr)) 36px;
 	}
 
 	.filters > :nth-child(4) {
@@ -524,5 +588,9 @@
 	.filters > :last-child {
 		grid-column: 3;
 		grid-row: 2;
+	}
+
+	.detailsContent {
+		padding-inline: 16px;
 	}
 }

@@ -683,6 +683,8 @@ export default function AddonManagerPage(): React.JSX.Element {
 								/>
 								<WinButton
 									className={styles.sortButton}
+									aria-label={`按优先级${snapshot.preferences.sortDirection === "ascending" ? "升序" : "降序"}排列`}
+									title={`按优先级${snapshot.preferences.sortDirection === "ascending" ? "升序" : "降序"}排列`}
 									onClick={() =>
 										updatePreferences({
 											sortDirection:
@@ -704,6 +706,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 									<div>
 										<button
 											type="button"
+											aria-label="新建子分组"
 											title="新建子分组"
 											onClick={() => openGroupDialog("create")}
 										>
@@ -711,6 +714,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 										</button>
 										<button
 											type="button"
+											aria-label="重命名分组"
 											title="重命名"
 											disabled={!selectedGroup}
 											onClick={() => openGroupDialog("rename")}
@@ -719,6 +723,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 										</button>
 										<button
 											type="button"
+											aria-label="删除分组"
 											title="删除"
 											disabled={!selectedGroup}
 											onClick={() => openGroupDialog("delete")}

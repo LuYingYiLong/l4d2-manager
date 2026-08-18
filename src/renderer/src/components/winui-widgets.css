@@ -1,0 +1,622 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 辅助控件：SelectorBar 项、Tooltip、Tree、ItemsRepeater、Refresh 和菜单栏 */
+
+.win-selector-bar {
+	position: relative;
+	display: inline-grid;
+	box-sizing: border-box;
+	min-width: 0;
+	color: var(--text-primary);
+	border: 0 solid transparent;
+}
+.win-selector-bar-items-view {
+	display: flex;
+	box-sizing: border-box;
+	width: max-content;
+	max-width: 100%;
+	min-width: 0;
+	align-items: center;
+	overflow-x: auto;
+	overflow-y: hidden;
+	scrollbar-width: none;
+}
+.win-selector-bar-items-view::-webkit-scrollbar {
+	display: none;
+}
+.win-selector-bar-item {
+	appearance: none;
+	-webkit-appearance: none;
+	position: relative;
+	display: grid;
+	box-sizing: border-box;
+	grid-template-columns: auto;
+	grid-template-rows: auto 3px;
+	min-width: 0;
+	min-height: 40px;
+	margin: 0;
+	padding: 0;
+	flex: 0 0 auto;
+	color: var(--text-primary);
+	font: inherit;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: var(--ControlCornerRadius, 4px);
+	box-shadow: none;
+	outline: none;
+	cursor: pointer;
+	line-height: normal;
+	text-align: inherit;
+	text-decoration: none;
+	text-transform: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}
+.win-selector-bar-item-content {
+	position: relative;
+	z-index: 1;
+	grid-row: 1;
+	grid-column: 1;
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	justify-content: inherit;
+	margin: var(--win-selector-bar-item-padding, 10px 12px 7px 12px);
+	gap: var(--SelectorBarItemSpacing, 8px);
+	color: inherit;
+	text-align: left;
+}
+.win-selector-bar-item-icon {
+	display: inline-flex;
+	width: 20px;
+	height: 20px;
+	margin: 0 -2px;
+	align-items: center;
+	justify-content: center;
+	color: inherit;
+	font-size: 20px;
+	line-height: 20px;
+	flex: 0 0 20px;
+	transform: scale(var(--SelectorBarItemIconScale, 0.8));
+	transform-origin: 50% 50%;
+}
+.win-selector-bar-item-icon-glyph {
+	display: inline-flex;
+	width: 20px;
+	height: 20px;
+	align-items: center;
+	justify-content: center;
+	color: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
+.win-selector-bar-item-text {
+	min-width: 0;
+	color: inherit;
+	font-size: var(--ControlContentThemeFontSize, 14px);
+	font-weight: 400;
+	line-height: 20px;
+	white-space: normal;
+}
+
+.win-selector-bar-item-selection-visual {
+	position: relative;
+	z-index: 1;
+	grid-row: 2;
+	grid-column: 1;
+	justify-self: center;
+	align-self: end;
+	width: 4px;
+	height: 3px;
+	opacity: 0;
+	background: var(--SelectorBarItemPillFill, var(--accent-base));
+	border-radius: 2px;
+	transition: none;
+	pointer-events: none;
+}
+.win-selector-bar-item-common-visual {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	border: 1px solid transparent;
+	border-radius: inherit;
+	background: transparent;
+	pointer-events: none;
+}
+.win-selector-bar-item.is-selected {
+	color: var(--text-primary);
+	background: transparent;
+}
+.win-selector-bar-item:hover:not(:disabled) {
+	color: var(--text-secondary);
+	background: transparent;
+}
+.win-selector-bar-item:active:not(:disabled) {
+	color: var(--text-tertiary);
+	background: transparent;
+}
+.win-selector-bar-item.is-selected:hover:not(:disabled),
+.win-selector-bar-item.is-selected:active:not(:disabled) {
+	color: var(--text-secondary);
+}
+.win-selector-bar-item.is-selected .win-selector-bar-item-selection-visual {
+	width: 16px;
+	opacity: 1;
+	animation: win-selector-bar-selection-visual-show 167ms var(--fast-out-slow-in) both;
+}
+.win-selector-bar-item.is-disabled {
+	color: var(--text-disabled);
+	background: transparent;
+	cursor: default;
+}
+.win-selector-bar-item.is-disabled .win-selector-bar-item-selection-visual {
+	background: var(--accent-fill-disabled, var(--text-disabled));
+}
+.win-selector-bar-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-selector-bar-item:hover:not(:disabled) .win-selector-bar-item-common-visual {
+	background: var(--subtle-secondary);
+}
+.win-selector-bar-item:active:not(:disabled) .win-selector-bar-item-common-visual {
+	background: var(--subtle-tertiary);
+}
+@keyframes win-selector-bar-selection-visual-show {
+	from {
+		width: 4px;
+		opacity: 0;
+	}
+	to {
+		width: 16px;
+		opacity: 1;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-selector-bar-item.is-selected .win-selector-bar-item-selection-visual {
+		animation: none;
+	}
+}
+
+.win-tooltip-host {
+	position: relative;
+	display: inline-flex;
+}
+.win-tooltip {
+	position: fixed;
+	z-index: 2147483647;
+	top: auto;
+	right: auto;
+	bottom: auto;
+	left: auto;
+	min-width: max-content;
+	max-width: 320px;
+	padding: 6px 9px 8px;
+	overflow-wrap: anywhere;
+	color: var(--ToolTipForegroundBrush, var(--text-primary));
+	--win-acrylic-fill: color-mix(
+		in srgb,
+		var(--ToolTipBackgroundBrush, var(--flyout-bg)) 78%,
+		transparent
+	);
+	background: transparent;
+	background-clip: padding-box;
+	border: 1px solid var(--ToolTipBorderBrush, var(--flyout-border));
+	border-radius: var(--ControlCornerRadius, 4px);
+	box-shadow:
+		0 8px 16px rgb(0 0 0 / 14%),
+		0 0 2px rgb(0 0 0 / 18%);
+	-webkit-backdrop-filter: var(--flyout-backdrop, blur(30px) saturate(160%));
+	backdrop-filter: var(--flyout-backdrop, blur(30px) saturate(160%));
+	font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+	font-size: 12px;
+	line-height: 16px;
+	pointer-events: auto;
+	isolation: isolate;
+	transform: none;
+}
+.win-tooltip[style*="visibility: visible"] {
+	animation: win-tooltip-fade-in 167ms linear both;
+}
+@keyframes win-tooltip-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.win-tree-view {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	color: var(--text-primary);
+}
+.win-tree-view.is-root {
+	min-height: 60px;
+	flex: 1;
+}
+.win-tree-node {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+}
+.win-tree-item {
+	display: flex;
+	min-height: 36px;
+	align-items: center;
+	gap: 6px;
+	box-sizing: border-box;
+	margin: 1px 0;
+	padding: 4px 8px;
+	border: 1px solid transparent;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: default;
+	user-select: none;
+	transition: background-color var(--fast-duration, 120ms);
+}
+.win-tree-item:hover {
+	background: var(--subtle-secondary, rgb(128 128 128 / 12%));
+}
+.win-tree-item:active {
+	background: var(--subtle-tertiary, rgb(128 128 128 / 18%));
+}
+.win-tree-item.selected {
+	background: var(--subtle-secondary, rgb(128 128 128 / 18%));
+}
+.win-tree-item.selected:hover {
+	background: var(--subtle-tertiary, rgb(128 128 128 / 18%));
+}
+.win-tree-item:focus-visible {
+	outline: 2px solid var(--accent-base, currentColor);
+	outline-offset: -2px;
+}
+.win-tree-item.drop-top {
+	box-shadow: inset 0 2px 0 var(--accent-base, currentColor);
+}
+.win-tree-item.drop-bottom {
+	box-shadow: inset 0 -2px 0 var(--accent-base, currentColor);
+}
+.win-tree-item.drop-inside {
+	background: var(--subtle-tertiary, rgb(128 128 128 / 18%));
+	box-shadow: inset 0 0 0 1px var(--accent-base, currentColor);
+}
+.win-tree-chevron {
+	display: inline-flex;
+	width: 24px;
+	height: 24px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-secondary, var(--text-primary));
+	font-size: 18px;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+	transition:
+		transform var(--fast-duration, 120ms),
+		background-color var(--fast-duration, 120ms);
+}
+.win-tree-chevron:hover:not(.is-hidden) {
+	background: var(--subtle-secondary, rgb(128 128 128 / 12%));
+}
+.win-tree-chevron.is-hidden {
+	visibility: hidden;
+	cursor: default;
+}
+.win-tree-chevron:not(.is-hidden) {
+	transform: rotate(0deg);
+}
+.win-tree-item[aria-expanded="true"] .win-tree-chevron {
+	transform: rotate(90deg);
+}
+.tree-checkbox {
+	display: flex;
+	align-items: center;
+	margin-right: 8px;
+}
+.win-tree-item-content {
+	display: inline-flex;
+	min-width: 0;
+	flex: 1;
+	align-items: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.win-tree-children {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.win-items-repeater {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	gap: var(--items-repeater-spacing, 0px);
+}
+.win-items-repeater.layout-uniformgridlayout,
+.win-items-repeater.layout-gridlayout {
+	display: grid;
+	grid-template-columns: var(
+		--items-repeater-grid-template,
+		repeat(auto-fill, minmax(var(--items-repeater-min-item-width, 120px), 1fr))
+	);
+	row-gap: var(--items-repeater-row-spacing, var(--items-repeater-spacing, 0px));
+	column-gap: var(--items-repeater-column-spacing, var(--items-repeater-spacing, 0px));
+}
+.win-items-repeater.orientation-vertical:not(.layout-uniformgridlayout):not(.layout-gridlayout) {
+	flex-direction: column;
+}
+.win-items-repeater.orientation-horizontal:not(.layout-uniformgridlayout):not(.layout-gridlayout) {
+	flex-direction: row;
+	width: max-content;
+	flex-wrap: nowrap;
+}
+.win-items-repeater.layout-activityfeedlayout {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(var(--items-repeater-min-item-width, 120px), 1fr));
+	grid-auto-rows: var(--items-repeater-min-item-height, 80px);
+	row-gap: var(--items-repeater-row-spacing, 0px);
+	column-gap: var(--items-repeater-column-spacing, 0px);
+}
+.win-items-repeater.layout-activityfeedlayout .win-items-repeater-element:nth-child(6n + 3),
+.win-items-repeater.layout-activityfeedlayout .win-items-repeater-element:nth-child(6n + 4) {
+	grid-column: span 2;
+}
+.win-items-repeater.layout-variedimagesizelayout {
+	column-width: var(--items-repeater-min-item-width, 120px);
+	column-gap: var(--items-repeater-column-spacing, 0px);
+}
+.win-items-repeater.layout-variedimagesizelayout .win-items-repeater-element {
+	display: inline-block;
+	width: 100%;
+	break-inside: avoid;
+	margin-bottom: var(--items-repeater-row-spacing, 0px);
+}
+.win-items-repeater-element {
+	min-width: 0;
+	min-height: var(--items-repeater-min-item-height, 80px);
+	box-sizing: border-box;
+	outline: none;
+}
+.win-items-repeater-element:focus-visible {
+	outline: 2px solid var(--accent-base, currentColor);
+	outline-offset: 2px;
+}
+
+.win-refresh-visualizer {
+	display: inline-flex;
+	width: 32px;
+	height: 32px;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+	box-sizing: border-box;
+	color: var(--accent-base, #0078d4);
+	animation: none;
+	transition:
+		opacity 200ms ease-out,
+		transform 200ms ease-out;
+}
+.win-refresh-icon {
+	width: 24px;
+	height: 24px;
+	fill: currentColor;
+}
+.win-refresh-icon.is-spinning {
+	animation: win-refresh-spin 1s linear infinite;
+}
+.win-refresh-visualizer.orientation-bottom {
+	transform-origin: center top;
+}
+.win-refresh-visualizer.orientation-top {
+	transform-origin: center bottom;
+}
+.win-refresh-visualizer.orientation-left {
+	transform-origin: right center;
+}
+.win-refresh-visualizer.orientation-right {
+	transform-origin: left center;
+}
+@keyframes win-refresh-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.win-animated-visual-player {
+	position: relative;
+	display: grid;
+	width: 100%;
+	height: 100%;
+	min-width: 48px;
+	min-height: 48px;
+	place-items: center;
+	overflow: hidden;
+	color: #007a87;
+}
+.win-animated-visual,
+.win-animated-visual-fallback {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+.win-animated-visual-background {
+	fill: #00d1c1;
+}
+.win-animated-visual-stroke,
+.win-animated-visual-dot {
+	fill: none;
+	stroke: #007a87;
+	stroke-width: 11;
+	stroke-linecap: round;
+}
+.win-animated-visual-stroke.stroke-1 {
+	stroke: #00d1c1;
+	stroke-width: 9;
+}
+.win-animated-visual-stroke.stroke-2,
+.win-animated-visual-stroke.stroke-4 {
+	stroke-width: 14;
+}
+.win-animated-visual-stroke.stroke-3 {
+	stroke: #fff;
+	stroke-width: 16;
+}
+.win-animated-visual-dot {
+	fill: #fff;
+	stroke: none;
+}
+.win-animated-visual-dot.dot-1,
+.win-animated-visual-dot.dot-5 {
+	fill: #00d1c1;
+}
+.win-animated-visual-mark {
+	transform-origin: 187.5px 333.5px;
+	transform: rotate(calc(var(--win-avp-progress, 0) * 360deg));
+	animation: win-animated-visual-logo 5.967s linear infinite paused;
+	animation-direction: var(--win-avp-direction, normal);
+}
+.win-animated-visual-player.is-playing .win-animated-visual-mark {
+	animation-play-state: running;
+	animation-duration: calc(5.967s / var(--win-avp-rate, 1));
+}
+@keyframes win-animated-visual-logo {
+	0% {
+		transform: rotate(0deg) scale(0.92);
+	}
+	45% {
+		transform: rotate(180deg) scale(1);
+	}
+	100% {
+		transform: rotate(360deg) scale(0.92);
+	}
+}
+
+.win-capture-element {
+	display: grid;
+	width: 100%;
+	height: 300px;
+	min-width: 400px;
+	min-height: 300px;
+	max-height: 300px;
+	grid-template-rows: auto minmax(0, 1fr);
+	grid-template-columns: minmax(0, 1fr) 100px;
+	gap: 10px 4px;
+	box-sizing: border-box;
+	color: var(--text-primary);
+}
+.win-capture-frame-source,
+.win-capture-captured-label {
+	min-height: 20px;
+	align-self: center;
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-capture-frame-source.empty {
+	color: var(--text-secondary);
+}
+.win-capture-captured-label {
+	visibility: hidden;
+}
+.win-capture-captured-label.visible {
+	visibility: visible;
+}
+.win-capture-preview {
+	position: relative;
+	min-width: 0;
+	min-height: 240px;
+	overflow: hidden;
+	background: #000;
+}
+.win-capture-preview video {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: 240px;
+	object-fit: contain;
+	background: #000;
+}
+.win-capture-preview.mirrored video {
+	transform: scaleX(-1);
+}
+.win-capture-container {
+	min-width: 0;
+	min-height: 0;
+	height: 100%;
+	overflow: hidden;
+}
+.win-capture-snapshots-scroll {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+}
+.win-capture-snapshots-scroll .win-scroll-viewer-viewport {
+	height: 100%;
+}
+.win-capture-snapshots {
+	display: flex;
+	min-height: 100%;
+	flex-direction: column;
+	gap: 2px;
+}
+.win-capture-snapshots img {
+	display: block;
+	width: 100%;
+	height: auto;
+	object-fit: contain;
+}
+@media (max-width: 520px) {
+	.win-capture-element {
+		min-width: 0;
+		grid-template-columns: minmax(0, 1fr) 84px;
+	}
+}
+
+.win-menu-bar {
+	min-height: 40px;
+	padding: 0 4px;
+}
+.win-menu-bar-item {
+	display: flex;
+	align-items: stretch;
+	margin: 4px 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.win-menu-bar-item.is-open,
+.win-menu-bar-item:hover {
+	background: var(--subtle-secondary, rgb(128 128 128 / 12%));
+}
+.win-menu-bar-button {
+	min-height: 32px;
+	padding: 6px 12px;
+	color: var(--text-primary);
+	font: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: inherit;
+	cursor: pointer;
+}
+.win-menu-bar-button:focus-visible {
+	outline: 2px solid var(--accent-base, currentColor);
+	outline-offset: -2px;
+}
+.win-menu-bar-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.win-tooltip[style*="visibility: visible"] {
+		animation-duration: 1ms;
+	}
+}

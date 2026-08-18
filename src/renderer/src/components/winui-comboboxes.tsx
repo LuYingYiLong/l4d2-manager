@@ -18,6 +18,8 @@ import type {
 } from "./winui-shared"
 
 type ComboFlyoutDirection = "top" | "bottom"
+const comboFlyoutShadowDelay = 160
+const comboFlyoutClipMargin = 32
 
 type ComboFlyoutRect = {
 	left: number
@@ -113,10 +115,10 @@ const playComboFlyoutReveal = (
 	}
 	const startRect = getComboFlyoutStartRect(flyout, originElement, direction)
 	const endRect = {
-		left: -15,
-		top: -15,
-		right: width + 15,
-		bottom: height + 15
+		left: -comboFlyoutClipMargin,
+		top: -comboFlyoutClipMargin,
+		right: width + comboFlyoutClipMargin,
+		bottom: height + comboFlyoutClipMargin
 	}
 	const startClipPath = comboFlyoutClipPath(startRect)
 	const endClipPath = comboFlyoutClipPath(endRect)
@@ -200,6 +202,7 @@ export function WinComboBox(
 	const [isEditing, setIsEditing] = useState(false)
 	const [highlightedIndex, setHighlightedIndex] = useState(-1)
 	const comboRevealRef = useRef<Animation | null>(null)
+	const comboShadowTimerRef = useRef<number | null>(null)
 	const revealSampleFrameRef = useRef<number | null>(null)
 	const pendingRevealRef = useRef(false)
 	const revealCycleRef = useRef(0)
@@ -237,6 +240,14 @@ export function WinComboBox(
 		flyoutRef.current.style.clipPath = ""
 		flyoutRef.current.style.willChange = ""
 	}
+	const setComboFlyoutShadowVisible = (visible: boolean) => {
+		flyoutRef.current?.classList.toggle("combo-flyout-shadow-visible", visible)
+	}
+	const clearComboFlyoutShadowTimer = () => {
+		if (comboShadowTimerRef.current === null) return
+		window.clearTimeout(comboShadowTimerRef.current)
+		comboShadowTimerRef.current = null
+	}
 	const stopRevealSampling = () => {
 		if (revealSampleFrameRef.current === null) return
 		cancelAnimationFrame(revealSampleFrameRef.current)
@@ -244,6 +255,7 @@ export function WinComboBox(
 	}
 	const cancelComboFlyoutReveal = (reason: string) => {
 		stopRevealSampling()
+		clearComboFlyoutShadowTimer()
 		const current = comboRevealRef.current
 		comboRevealRef.current = null
 		if (current) {
@@ -251,12 +263,14 @@ export function WinComboBox(
 			emitProbe("reveal-cancel", { reason })
 		}
 		clearComboFlyoutClipPath()
+		setComboFlyoutShadowVisible(reason.startsWith("position-changed"))
 	}
 	const startComboFlyoutReveal = (cycle = revealCycleRef.current) => {
 		if (cycle !== revealCycleRef.current || revealStartedCycleRef.current === cycle) return
 		const flyout = flyoutRef.current
 		if (!flyout) return
 		revealStartedCycleRef.current = cycle
+		setComboFlyoutShadowVisible(false)
 		cancelComboFlyoutReveal("superseded-before-start")
 		const selectedIndex = visibleIndexes.includes(selected)
 			? selected
@@ -268,10 +282,15 @@ export function WinComboBox(
 			positionRef.current.opensUp ? "bottom" : "top"
 		)
 		if (!current) {
+			setComboFlyoutShadowVisible(true)
 			emitProbe("reveal-skipped", { reason: "animation-unavailable" })
 			return
 		}
 		comboRevealRef.current = current
+		comboShadowTimerRef.current = window.setTimeout(() => {
+			comboShadowTimerRef.current = null
+			if (comboRevealRef.current === current) setComboFlyoutShadowVisible(true)
+		}, comboFlyoutShadowDelay)
 		emitProbe("reveal-start", {
 			direction: positionRef.current.opensUp ? "bottom" : "top",
 			selectedIndex,
@@ -301,14 +320,18 @@ export function WinComboBox(
 			if (comboRevealRef.current !== current) return
 			comboRevealRef.current = null
 			stopRevealSampling()
+			clearComboFlyoutShadowTimer()
 			clearComboFlyoutClipPath()
+			setComboFlyoutShadowVisible(true)
 			emitProbe("reveal-finish", { animationCount: flyout.getAnimations().length })
 		}
 		current.oncancel = () => {
 			if (comboRevealRef.current !== current) return
 			comboRevealRef.current = null
 			stopRevealSampling()
+			clearComboFlyoutShadowTimer()
 			clearComboFlyoutClipPath()
+			setComboFlyoutShadowVisible(false)
 			emitProbe("reveal-cancel", { reason: "animation-cancelled-externally" })
 		}
 	}

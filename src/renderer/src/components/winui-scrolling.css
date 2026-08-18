@@ -1,0 +1,1503 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 滚动与集合：ScrollViewer、ListView、GridView、TreeView 和日历视图 */
+
+.win-scroll-viewer {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
+	background: transparent;
+	border-radius: 0;
+}
+.win-scroll-viewer-viewport {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	box-sizing: border-box;
+	contain: layout style paint;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	overscroll-behavior: contain;
+	will-change: scroll-position;
+}
+.win-scroll-viewer-viewport::-webkit-scrollbar {
+	display: none;
+}
+.win-scroll-viewer-viewport:focus-visible {
+	outline: 2px solid var(--accent-base);
+	outline-offset: -2px;
+}
+.scroll-content {
+	display: block;
+	width: 100%;
+	min-width: 0;
+	min-height: max-content;
+	transition: transform 100ms ease-out;
+	will-change: transform;
+}
+.win-scroll-viewer.zooming .scroll-content {
+	transition-duration: 50ms;
+}
+.scrollbar {
+	position: absolute;
+	z-index: 1;
+	min-width: 0;
+	min-height: 0;
+	background: transparent;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	opacity: 1;
+	pointer-events: auto;
+	transition: opacity 83ms linear;
+}
+.scrollbar.visible {
+	opacity: 1;
+	pointer-events: auto;
+}
+.scrollbar-vertical {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 12px;
+}
+.scrollbar-horizontal {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 12px;
+}
+.scrollbar-corner {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 12px;
+	height: 12px;
+	opacity: 0;
+	background: var(--ScrollViewerScrollBarSeparatorBackground, transparent);
+	transition: opacity 83ms linear;
+}
+.win-scroll-viewer.scrollbar-corner-visible .scrollbar-corner {
+	opacity: 1;
+}
+.scrollbar-track {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+	isolation: isolate;
+	background: transparent;
+	border: 0 solid var(--ScrollBarTrackStroke, transparent);
+	border-radius: 6px;
+	-webkit-backdrop-filter: var(--flyout-backdrop, blur(30px));
+	backdrop-filter: var(--flyout-backdrop, blur(30px));
+	transition: opacity 83ms linear;
+}
+.scrollbar-track::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	border-radius: inherit;
+	background: var(
+		--ScrollBarTrackFill,
+		color-mix(in srgb, var(--flyout-bg, Canvas) 78%, transparent)
+	);
+	pointer-events: none;
+}
+.scrollbar.expanded .scrollbar-track {
+	opacity: 1;
+	transition-delay: 400ms;
+}
+.scrollbar.contracting .scrollbar-track {
+	opacity: 0;
+	transition-delay: 500ms;
+}
+.scrollbar-vertical.has-cross-scrollbar .scrollbar-track {
+	bottom: 12px;
+}
+.scrollbar-horizontal.has-cross-scrollbar .scrollbar-track {
+	right: 12px;
+}
+.scrollbar-thumb {
+	position: absolute;
+	z-index: 1;
+	box-sizing: border-box;
+	background: transparent;
+	border: 0;
+	border-radius: 3px;
+	cursor: pointer;
+	touch-action: none;
+	transition:
+		width 167ms cubic-bezier(0, 0, 0, 1),
+		height 167ms cubic-bezier(0, 0, 0, 1),
+		right 167ms cubic-bezier(0, 0, 0, 1),
+		bottom 167ms cubic-bezier(0, 0, 0, 1),
+		transform 167ms cubic-bezier(0, 0, 0, 1),
+		background 83ms linear;
+}
+.scrollbar.dragging .scrollbar-thumb,
+.scrollbar.line-scrolling .scrollbar-thumb {
+	transition: none;
+}
+.scrollbar-thumb::before {
+	content: "";
+	position: absolute;
+	inset: 3px;
+	border-radius: 999px;
+	background: var(--ScrollBarThumbBackground, var(--ctrl-strong-fill, rgba(0, 0, 0, 0.45)));
+	transition: background-color 83ms linear;
+}
+.scrollbar-vertical .scrollbar-thumb {
+	right: 0;
+	width: 8px;
+	min-height: 30px;
+}
+.scrollbar-horizontal .scrollbar-thumb {
+	left: 0;
+	bottom: 0;
+	height: 8px;
+	min-width: 30px;
+}
+.scrollbar-vertical.expanded .scrollbar-thumb {
+	width: 12px;
+	transition-delay: 400ms, 400ms, 400ms, 400ms, 0ms, 0ms;
+}
+.scrollbar-horizontal.expanded .scrollbar-thumb {
+	height: 12px;
+	transition-delay: 400ms, 400ms, 400ms, 400ms, 0ms, 0ms;
+}
+.scrollbar-vertical.contracting .scrollbar-thumb {
+	right: 0;
+	width: 8px;
+	transition-delay: 500ms, 500ms, 500ms, 500ms, 0ms, 0ms;
+}
+.scrollbar-horizontal.contracting .scrollbar-thumb {
+	bottom: 0;
+	height: 8px;
+	transition-delay: 500ms, 500ms, 500ms, 500ms, 0ms, 0ms;
+}
+.scrollbar-thumb:hover::before {
+	background: var(--ScrollBarThumbFillPointerOver, var(--ctrl-strong-fill, rgba(0, 0, 0, 0.55)));
+}
+.scrollbar-thumb:active::before {
+	background: var(--ScrollBarThumbFillPressed, var(--ctrl-strong-fill, rgba(0, 0, 0, 0.65)));
+}
+.scrollbar-button {
+	position: absolute;
+	z-index: 2;
+	display: grid;
+	width: 12px;
+	height: 12px;
+	min-width: 12px;
+	min-height: 12px;
+	place-items: center;
+	padding: 0;
+	color: var(--ScrollBarButtonArrowForeground, var(--ctrl-strong-fill));
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 8px;
+	line-height: 1;
+	background: transparent;
+	border: 0;
+	opacity: 0;
+	pointer-events: none;
+	touch-action: none;
+	transition:
+		opacity 83ms linear 500ms,
+		color 83ms linear;
+}
+.scrollbar.expanded .scrollbar-button {
+	opacity: 1;
+	pointer-events: auto;
+	transition-delay: 400ms, 0ms;
+}
+.scrollbar-button.decrease {
+	top: 0;
+	left: 0;
+}
+.scrollbar-button.increase {
+	right: 0;
+	bottom: 0;
+}
+.scrollbar-vertical.has-cross-scrollbar .scrollbar-button.increase {
+	bottom: 12px;
+}
+.scrollbar-horizontal.has-cross-scrollbar .scrollbar-button.increase {
+	right: 12px;
+}
+.scrollbar-button:hover {
+	color: var(--text-secondary);
+}
+.scrollbar-button:active {
+	transform: scale(0.875);
+}
+.win-scrollbar {
+	position: relative;
+	box-sizing: border-box;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	opacity: 1;
+	transition: opacity 200ms var(--fast-out-slow-in, ease);
+}
+.win-scrollbar.vertical {
+	width: 17px;
+	min-height: 100px;
+}
+.win-scrollbar.horizontal {
+	height: 17px;
+	min-width: 100px;
+}
+.win-scrollbar.thin.vertical {
+	width: 12px;
+}
+.win-scrollbar.thin.horizontal {
+	height: 12px;
+}
+.win-scrollbar.auto-hide {
+	opacity: 0.3;
+}
+.win-scrollbar.hovered,
+.win-scrollbar.dragging,
+.win-scrollbar:hover,
+.win-scrollbar:focus-visible {
+	opacity: 1;
+}
+.win-scrollbar.disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+.win-scrollbar:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--accent-base));
+	outline-offset: 1px;
+}
+.win-scrollbar-track {
+	position: absolute;
+	inset: 0;
+	isolation: isolate;
+	background: transparent;
+	border-radius: 8px;
+	opacity: 0;
+	-webkit-backdrop-filter: var(--flyout-backdrop, blur(30px));
+	backdrop-filter: var(--flyout-backdrop, blur(30px));
+	transition: opacity 100ms var(--fast-out-slow-in, ease);
+}
+.win-scrollbar-track::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	border-radius: inherit;
+	background: var(
+		--ScrollBarTrackFill,
+		color-mix(in srgb, var(--flyout-bg, Canvas) 78%, transparent)
+	);
+	pointer-events: none;
+}
+.win-scrollbar.hovered .win-scrollbar-track,
+.win-scrollbar.dragging .win-scrollbar-track,
+.win-scrollbar:focus-visible .win-scrollbar-track {
+	opacity: 1;
+}
+.win-scrollbar-thumb {
+	position: absolute;
+	box-sizing: border-box;
+	min-width: 6px;
+	min-height: 6px;
+	background: rgb(99 99 99 / 60%);
+	border-radius: 8px;
+	cursor: pointer;
+	touch-action: none;
+	transition:
+		background 100ms var(--fast-out-slow-in, ease),
+		width 100ms var(--fast-out-slow-in, ease),
+		height 100ms var(--fast-out-slow-in, ease);
+}
+.win-scrollbar.vertical .win-scrollbar-thumb {
+	left: 50%;
+	width: 6px;
+	min-height: 40px;
+	transform: translateX(-50%);
+}
+.win-scrollbar.horizontal .win-scrollbar-thumb {
+	top: 50%;
+	height: 6px;
+	min-width: 40px;
+	transform: translateY(-50%);
+}
+.win-scrollbar.hovered.vertical .win-scrollbar-thumb,
+.win-scrollbar.dragging.vertical .win-scrollbar-thumb {
+	width: 10px;
+	background: rgb(99 99 99 / 80%);
+}
+.win-scrollbar.hovered.horizontal .win-scrollbar-thumb,
+.win-scrollbar.dragging.horizontal .win-scrollbar-thumb {
+	height: 10px;
+	background: rgb(99 99 99 / 80%);
+}
+.win-scrollbar.mode-touchindicator.vertical .win-scrollbar-thumb {
+	width: 8px;
+}
+.win-scrollbar.mode-touchindicator.horizontal .win-scrollbar-thumb {
+	height: 8px;
+}
+.win-scrollbar.mode-none .win-scrollbar-thumb {
+	opacity: 0;
+}
+.win-scrollbar-thumb:hover {
+	background: rgb(99 99 99 / 85%);
+}
+.win-scrollbar-thumb:active {
+	background: rgb(66 66 66 / 90%);
+}
+.win-annotated-scrollbar {
+	position: relative;
+	display: flex;
+	width: 18px;
+	min-height: 100px;
+	flex-direction: column;
+}
+.win-annotated-scrollbar .scrollbar-rail {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: var(--subtle-fill-color-transparent, transparent);
+	border-radius: 9px;
+	transition: background var(--fast-duration) var(--fast-out-slow-in);
+}
+.win-annotated-scrollbar.is-pointer-over .scrollbar-rail {
+	background: var(--subtle-fill-color-secondary, var(--subtle-secondary));
+}
+.win-annotated-scrollbar.is-disabled .scrollbar-rail {
+	background: var(--subtle-fill-color-disabled, var(--subtle-disabled));
+	opacity: 0.5;
+}
+.win-annotated-scrollbar .scrollbar-labels {
+	position: absolute;
+	top: 0;
+	left: -40px;
+	z-index: 1;
+	width: 36px;
+	height: 100%;
+	pointer-events: none;
+}
+.win-annotated-scrollbar .scrollbar-label {
+	position: absolute;
+	right: 0;
+	padding: 2px 6px;
+	color: var(--text-secondary);
+	font-size: 11px;
+	line-height: 16px;
+	white-space: nowrap;
+	background: var(--card-bg);
+	border: 1px solid var(--card-stroke);
+	border-radius: 4px;
+	cursor: pointer;
+	pointer-events: auto;
+	transform: translateY(-50%);
+	transition:
+		background var(--fast-duration) var(--fast-out-slow-in),
+		border-color var(--fast-duration) var(--fast-out-slow-in),
+		color var(--fast-duration) var(--fast-out-slow-in),
+		transform var(--fast-duration) var(--fast-out-slow-in);
+}
+.win-annotated-scrollbar .scrollbar-label:hover {
+	color: var(--text-primary);
+	background: var(--subtle-secondary);
+	border-color: var(--control-stroke);
+	transform: translateY(-50%) scale(1.05);
+}
+.win-annotated-scrollbar .scrollbar-label:active {
+	transform: translateY(-50%) scale(0.98);
+}
+.win-annotated-scrollbar.is-disabled .scrollbar-label {
+	opacity: 0.5;
+	pointer-events: none;
+}
+.win-annotated-scrollbar .scrollbar-thumb {
+	position: absolute;
+	top: 0;
+	right: 3px;
+	left: 3px;
+	width: auto;
+	min-height: 40px;
+	background: var(--control-strong-fill, var(--text-secondary));
+	border-radius: 6px;
+	cursor: pointer;
+	transition:
+		background var(--fast-duration) var(--fast-out-slow-in),
+		transform 0ms linear;
+	will-change: transform;
+}
+.win-annotated-scrollbar .scrollbar-thumb:hover,
+.win-annotated-scrollbar.is-pressed .scrollbar-thumb {
+	background: var(--text-secondary);
+}
+.win-annotated-scrollbar .scrollbar-thumb:active {
+	background: var(--text-primary);
+}
+.win-annotated-scrollbar.is-disabled .scrollbar-thumb {
+	background: var(--text-disabled);
+	cursor: default;
+}
+.win-annotated-scrollbar .detail-label {
+	position: absolute;
+	left: -120px;
+	z-index: 100;
+	width: 100px;
+	padding: 6px 10px;
+	box-sizing: border-box;
+	overflow: hidden;
+	color: var(--text-primary);
+	font-size: 12px;
+	line-height: 16px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	background: var(--card-bg);
+	border: 1px solid var(--card-stroke);
+	border-radius: 6px;
+	box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
+	pointer-events: none;
+}
+@media (hover: none) and (pointer: coarse) {
+	.win-annotated-scrollbar {
+		width: 24px;
+	}
+	.win-annotated-scrollbar .scrollbar-thumb {
+		right: 4px;
+		left: 4px;
+	}
+	.win-annotated-scrollbar .scrollbar-label {
+		padding: 4px 8px;
+		font-size: 12px;
+	}
+}
+.zoom-mode-disabled {
+	touch-action: pan-x pan-y;
+}
+.zoom-mode-enabled {
+	touch-action: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.scroll-content,
+	.scrollbar,
+	.scrollbar-track,
+	.scrollbar-button,
+	.scrollbar-thumb,
+	.win-scrollbar,
+	.win-scrollbar-track,
+	.win-scrollbar-thumb {
+		transition: none;
+	}
+}
+.win-horizontal-scroll {
+	white-space: nowrap;
+}
+
+.win-items-view,
+.win-list-box,
+.win-list-view,
+.win-grid-view {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	color: var(--text-primary);
+}
+.win-items-view-layout {
+	min-width: 0;
+	min-height: 0;
+}
+.win-items-view-layout.layout-stacklayout {
+	display: flex;
+	flex-direction: column;
+	gap: var(--items-view-spacing, 0px);
+}
+.win-items-view-layout.layout-uniformgridlayout {
+	display: grid;
+	grid-template-columns: var(
+		--items-view-grid-template,
+		repeat(auto-fill, minmax(var(--items-view-min-item-width, 150px), 1fr))
+	);
+	grid-auto-rows: minmax(var(--items-view-min-item-height, 80px), max-content);
+	column-gap: var(--items-view-column-spacing, 0px);
+	row-gap: var(--items-view-row-spacing, 0px);
+}
+.win-items-view-layout.layout-linedflowlayout {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--items-view-min-item-width, 150px), 1fr));
+	grid-auto-rows: var(--items-view-line-height, 160px);
+	column-gap: var(--items-view-column-spacing, 0px);
+	row-gap: var(--items-view-row-spacing, 0px);
+}
+.win-items-view-item {
+	position: relative;
+	min-width: 0;
+	box-sizing: border-box;
+	padding: 8px 10px;
+	color: var(--text-primary);
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	outline: none;
+}
+.win-items-view-item.invokable {
+	cursor: pointer;
+}
+.win-items-view-item:hover {
+	background: var(--subtle-secondary);
+}
+.win-items-view-item:active {
+	background: var(--subtle-tertiary);
+}
+.win-items-view-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: 1px;
+}
+.win-items-view-item.selected {
+	background: var(--subtle-secondary);
+	border-color: var(--accent-base);
+}
+.win-list-box {
+	position: relative;
+	isolation: isolate;
+	background: transparent;
+	border: 1px solid var(--card-stroke, var(--ctrl-border));
+	border-radius: 0;
+	backdrop-filter: var(--flyout-backdrop, blur(30px));
+}
+.win-list-box::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	pointer-events: none;
+	border-radius: inherit;
+	background: var(--card-bg, transparent);
+}
+.win-list-box .win-items-view-layout {
+	display: flex;
+	flex-direction: column;
+}
+.win-list-box .win-items-view-item {
+	padding: 8px 12px;
+	border-radius: 0;
+	cursor: pointer;
+	transition: background var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-list-box .win-items-view-item:hover {
+	background: var(--subtle-secondary);
+}
+.win-list-box .win-items-view-item.selected {
+	background: var(--accent-base);
+	border-color: transparent;
+	color: var(--accent-text);
+}
+.win-items-view-layout.layout-stacklayout .win-items-view-item.selected {
+	border-left-width: 3px;
+}
+.win-list-box .win-items-view-layout.layout-stacklayout .win-items-view-item.selected {
+	border-left-width: 1px;
+}
+.selection-checkbox {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 1;
+	padding: 0;
+	background: transparent;
+	border-radius: 0;
+}
+.list-selection-box {
+	display: inline-grid;
+	width: 20px;
+	height: 20px;
+	margin-right: 8px;
+	place-items: center;
+	vertical-align: middle;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	line-height: 1;
+	color: transparent;
+	background: transparent;
+	border: 1px solid var(--ctrl-border);
+	border-radius: 3px;
+}
+.list-selection-box.checked {
+	color: var(--accent-text);
+	background: var(--accent-base);
+	border-color: var(--accent-base);
+}
+.win-list-view-selection-indicator {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	z-index: 3;
+	width: 3px;
+	height: max(16px, calc(100% - 40px));
+	background: var(--accent-base);
+	border-radius: 1.5px;
+	opacity: 0;
+	transform: translateY(-50%);
+	transition: opacity var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+	pointer-events: none;
+}
+.win-list-view-selection-indicator.active {
+	opacity: 1;
+}
+.win-grid-view {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	flex-direction: column;
+}
+.win-grid-groups,
+.win-grid-group {
+	width: 100%;
+	min-width: 0;
+}
+.win-grid-group-header {
+	appearance: none;
+	display: flex;
+	width: 100%;
+	min-height: 44px;
+	flex-direction: column;
+	align-items: stretch;
+	box-sizing: border-box;
+	margin: 0 0 4px;
+	padding: 8px 12px 0;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	cursor: default;
+}
+.win-grid-group-header:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--accent-base));
+	outline-offset: -2px;
+}
+.win-grid-group-divider {
+	display: block;
+	width: 100%;
+	height: 1px;
+	margin-top: 8px;
+	flex: 0 0 1px;
+	background: transparent;
+}
+.win-grid-group-items {
+	padding-bottom: 4px;
+}
+.win-grid-view-inner {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+.win-grid-item {
+	position: relative;
+	box-sizing: border-box;
+	overflow: hidden;
+	border: 2px solid transparent;
+	border-radius: 4px;
+	min-width: 64px;
+	min-height: 40px;
+	padding: 8px;
+	cursor: default;
+	transition:
+		transform 300ms cubic-bezier(0.1, 0.9, 0.2, 1),
+		filter 200ms ease,
+		opacity 200ms ease,
+		border-color 100ms ease;
+}
+.win-grid-item.has-checkbox {
+	min-width: 96px;
+	padding-right: 36px;
+}
+.win-grid-item.clickEnabled {
+	cursor: pointer;
+}
+.win-grid-item.clickEnabled:hover {
+	border-color: var(--stroke-divider, rgb(150 150 150 / 40%));
+}
+.win-grid-item.clickEnabled:active {
+	border-color: transparent;
+}
+.win-grid-item.selected {
+	border-color: var(--accent-base);
+}
+.win-grid-item.selected:hover {
+	border-color: var(--accent-base);
+}
+.win-grid-item.selected:active {
+	border-color: transparent;
+}
+.win-grid-item.dragging-source {
+	visibility: hidden;
+	pointer-events: none;
+}
+.win-grid-item.drag-shrink {
+	opacity: 0.7;
+	filter: grayscale(0.15) brightness(0.92);
+	transform: scale(0.95);
+}
+.win-grid-item.drag-shrink::after {
+	position: absolute;
+	inset: 0;
+	content: "";
+	border-radius: 4px;
+	background: rgb(0 0 0 / 8%);
+	pointer-events: none;
+}
+.win-grid-drop-placeholder {
+	flex-shrink: 0;
+	border-radius: 4px;
+	background: var(--accent-base, #0078d4);
+	opacity: 0.15;
+}
+.grid-item-inner {
+	width: 100%;
+	height: 100%;
+}
+.grid-checkbox {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	z-index: 2;
+	display: flex;
+	width: 20px;
+	height: 20px;
+	align-items: center;
+	justify-content: center;
+}
+.drag-count-badge {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 3;
+	display: flex;
+	width: 28px;
+	height: 28px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: var(--accent-base);
+	color: var(--accent-text, #fff);
+	font-size: 13px;
+	font-weight: 700;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+.win-list-view {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	user-select: none;
+}
+.win-list-scroll-viewer,
+.win-list-scroll-viewer .win-scroll-viewer-viewport,
+.win-list-content {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+.win-list-content {
+	box-sizing: border-box;
+	position: relative;
+	min-height: 100%;
+}
+.win-list-group {
+	display: block;
+	width: 100%;
+	min-width: 0;
+}
+.win-list-header {
+	box-sizing: border-box;
+	min-height: 40px;
+	padding: 8px 12px;
+	color: var(--text-primary);
+	font-size: 20px;
+	font-weight: 400;
+	line-height: 28px;
+	background: var(--app-bg, var(--layer-fill));
+}
+.win-list-header.sticky {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+}
+.win-list-item {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	box-sizing: border-box;
+	min-width: 88px;
+	min-height: 40px;
+	padding: 0 12px 0 16px;
+	gap: 0;
+	color: var(--text-primary);
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	outline: none;
+	overflow: hidden;
+	cursor: default;
+	user-select: none;
+	transition:
+		background-color var(--faster-duration, 83ms) linear,
+		transform 250ms cubic-bezier(0.1, 0.9, 0.2, 1),
+		opacity 200ms ease;
+}
+.win-list-item[draggable="true"] {
+	cursor: grab;
+}
+.win-list-item[draggable="true"]:active {
+	cursor: grabbing;
+}
+.win-list-item:hover {
+	background: var(--subtle-secondary);
+}
+.win-list-item:active {
+	background: var(--subtle-tertiary);
+}
+.win-list-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: 1px;
+}
+.win-list-item.selected {
+	background: var(--subtle-secondary);
+}
+.win-list-item.selected:hover {
+	background: var(--subtle-tertiary);
+}
+.win-list-item.selected:active {
+	background: var(--subtle-secondary);
+}
+.win-list-item.content-stretch > :not(.list-selection-box):not(.win-list-view-selection-indicator) {
+	min-width: 0;
+	align-self: stretch;
+	flex: 1 1 auto;
+}
+.win-list-item.dragging-source {
+	opacity: 0.3;
+	pointer-events: none;
+}
+.win-list-item.drag-before::before {
+	position: absolute;
+	top: -2px;
+	right: 8px;
+	left: 8px;
+	height: 2px;
+	content: "";
+	background: var(--accent-base);
+	border-radius: 2px;
+}
+.win-list-view.disabled {
+	opacity: 0.3;
+}
+.win-list-view.disabled .win-list-item {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.win-item {
+	padding: 8px 10px;
+	color: var(--text-primary);
+	text-align: left;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.win-item:hover,
+.win-item.selected {
+	background: var(--subtle-secondary);
+}
+.win-tree-node button {
+	padding: 5px;
+	color: var(--text-primary);
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+.win-combo-box {
+	position: relative;
+	display: inline-block;
+	min-width: 64px;
+	vertical-align: top;
+	color: var(--text-primary);
+}
+.win-combo-header {
+	display: block;
+	margin: 0 0 4px;
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-combo-button,
+.win-combo-btn {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 38px;
+	width: 100%;
+	min-width: 120px;
+	min-height: 32px;
+	align-items: stretch;
+	gap: 0;
+	padding: 0;
+	text-align: left;
+}
+.win-combo-content {
+	display: block;
+	box-sizing: border-box;
+	min-width: 0;
+	overflow: hidden;
+	padding: 5px 0 7px 12px;
+	line-height: 20px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.win-combo-button:focus-visible,
+.win-combo-edit-input:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-combo-button .is-placeholder,
+.win-combo-edit-input::placeholder {
+	color: var(--text-secondary);
+}
+.win-combo-edit-input {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 32px;
+	padding: 5px 11px 6px;
+	color: var(--text-primary);
+	font: inherit;
+	background: var(--ctrl-fill-default);
+	border: 1px solid var(--ctrl-border);
+	border-radius: 4px;
+}
+.win-combo-box.is-disabled {
+	color: var(--text-disabled);
+}
+.win-combo-box.is-disabled .win-combo-header,
+.win-combo-box.is-disabled .win-combo-button,
+.win-combo-box.is-disabled .win-combo-chevron {
+	color: var(--text-disabled);
+}
+.win-combo-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 999;
+	pointer-events: none;
+}
+.win-combo-flyout {
+	position: fixed;
+	/* ComboBox flyouts are portaled and must sit above the title-bar hit layer. */
+	z-index: 10001;
+	box-sizing: border-box;
+	width: max-content;
+	min-width: 80px;
+	max-width: calc(100vw - 16px);
+	overflow: hidden;
+	color: var(--text-primary);
+	--win-acrylic-fill: var(--flyout-bg);
+	isolation: isolate;
+	background: transparent;
+	border: 1px solid var(--surface-stroke-color-flyout, var(--flyout-border));
+	border-radius: 8px;
+	box-shadow: none;
+	transition: box-shadow 180ms cubic-bezier(0, 0, 0, 1);
+	-webkit-backdrop-filter: var(--flyout-backdrop);
+	backdrop-filter: var(--flyout-backdrop);
+}
+.win-combo-flyout.combo-flyout-shadow-visible {
+	box-shadow: 0 5px 15px rgb(0 0 0 / 20%);
+}
+.win-combo-items-presenter {
+	box-sizing: border-box;
+	width: 100%;
+	padding: 4px 0;
+}
+.win-combo-scroll-viewer {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	max-height: inherit;
+}
+.win-combo-scroll-viewer .win-scroll-viewer-viewport {
+	height: 100%;
+	max-height: inherit;
+}
+.win-combo-scroll-viewer .scroll-content {
+	min-width: 100%;
+}
+.win-combo-flyout.edge-square-top {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+.win-combo-flyout.edge-square-bottom {
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+.win-combo-flyout.touch-input .win-combo-items-presenter {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.win-combo-item {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: max-content;
+	margin: 0;
+	padding: 0;
+	color: var(--text-primary);
+	background: transparent;
+	border: 0;
+	border-radius: 3px;
+	cursor: pointer;
+	font: inherit;
+	line-height: 20px;
+	text-align: left;
+	white-space: nowrap;
+}
+.win-combo-item-layout {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: calc(100% - 10px);
+	min-height: 32px;
+	align-items: center;
+	margin: 2px 5px;
+	border-radius: 3px;
+}
+.win-combo-item-content {
+	display: block;
+	box-sizing: border-box;
+	min-width: 0;
+	overflow: hidden;
+	padding: 5px 11px 7px;
+	text-overflow: ellipsis;
+}
+.win-combo-flyout.touch-input .win-combo-item-layout {
+	min-height: 44px;
+}
+.win-combo-flyout.touch-input .win-combo-item-content {
+	padding-top: 11px;
+	padding-bottom: 13px;
+}
+.win-combo-item:hover .win-combo-item-layout,
+.win-combo-item.selected .win-combo-item-layout {
+	background: var(--subtle-secondary);
+}
+.win-combo-item:active .win-combo-item-layout {
+	color: var(--text-secondary);
+	background: var(--subtle-tertiary);
+}
+.win-combo-item.selected:hover .win-combo-item-layout {
+	background: var(--subtle-tertiary);
+}
+.win-combo-item:focus-visible {
+	outline: 2px solid var(--text-primary);
+	outline-offset: -2px;
+}
+.win-combo-item-pill {
+	position: absolute;
+	top: 50%;
+	left: 1px;
+	width: 3px;
+	height: 16px;
+	background: var(--accent-base);
+	border-radius: 1.5px;
+	transform: translateY(-50%);
+	transition: height 167ms cubic-bezier(0, 0, 0, 1);
+}
+.win-combo-item.selected:active .win-combo-item-pill {
+	height: 10px;
+}
+.win-combo-editable {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 38px;
+	width: 100%;
+	min-width: 120px;
+	align-items: stretch;
+}
+.win-combo-editable .win-combo-edit-input,
+.win-combo-edit-display {
+	grid-column: 1;
+	width: 100%;
+	min-width: 0;
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+.win-combo-editable .win-combo-edit-input {
+	height: 32px;
+	min-height: 32px;
+	border-right: 0;
+}
+.win-combo-edit-display {
+	grid-row: 1;
+	grid-column: 1;
+	border-right: 0;
+}
+.win-combo-drop-down-button {
+	display: grid;
+	grid-row: 1;
+	grid-column: 2;
+	width: 38px;
+	min-width: 38px;
+	min-height: 32px;
+	place-items: center;
+	padding: 0;
+	color: var(--text-primary);
+	background: var(--ctrl-fill-default, var(--ctrl-fill));
+	border: 1px solid var(--ctrl-border-rest, var(--ctrl-border));
+	border-left: 0;
+	border-radius: 0 4px 4px 0;
+	cursor: pointer;
+}
+.win-combo-drop-down-button:hover {
+	background: var(--ctrl-fill-hover, var(--subtle-secondary));
+}
+.win-combo-drop-down-button:active {
+	background: var(--ctrl-fill-pressed, var(--subtle-tertiary));
+}
+.win-combo-drop-down-button:focus-visible {
+	z-index: 1;
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-combo-drop-down-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}
+.win-combo-chevron {
+	grid-row: 1;
+	grid-column: 2;
+	z-index: 2;
+	width: 12px;
+	height: 12px;
+	margin: 0 14px 0 0;
+	place-self: center end;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	color: var(--text-secondary);
+	font-size: 0;
+	line-height: 12px;
+}
+.win-calendar-date-picker,
+.win-date-picker {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.win-calendar-view {
+	position: relative;
+	box-sizing: border-box;
+	width: 304px;
+	min-width: 304px;
+	min-height: 316px;
+	flex: 0 0 304px;
+	isolation: isolate;
+	padding: 12px;
+	color: var(--text-primary);
+	user-select: none;
+	background: transparent;
+	border: 1px solid var(--ctrl-border-rest, var(--ctrl-border));
+	border-radius: 4px;
+	-webkit-backdrop-filter: var(--calendar-view-backdrop, var(--flyout-backdrop));
+	backdrop-filter: var(--calendar-view-backdrop, var(--flyout-backdrop));
+}
+.win-calendar-view::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	pointer-events: none;
+	background: var(--calendar-view-fill, var(--layer-default, var(--flyout-bg)));
+	border-radius: inherit;
+}
+.win-calendar-view.disabled {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.calendar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 4px;
+}
+.calendar-title-btn {
+	box-sizing: border-box;
+	justify-content: flex-start;
+	width: auto;
+	min-width: 0;
+	height: 32px;
+	min-height: 32px;
+	flex: 1;
+	margin-right: 4px;
+	padding: 4px 8px;
+	font-size: 14px;
+	font-weight: 600;
+	border-radius: 4px;
+}
+.calendar-title-btn > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.calendar-nav {
+	display: flex;
+	gap: 4px;
+}
+.icon-btn {
+	display: flex;
+	box-sizing: border-box;
+	width: 32px;
+	min-width: 32px;
+	height: 32px;
+	min-height: 32px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-primary);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 8px;
+	line-height: 1;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.icon-btn:hover,
+.calendar-title-btn:hover {
+	background: var(--subtle-secondary);
+}
+.icon-btn:disabled,
+.calendar-title-btn:disabled {
+	color: var(--text-disabled, var(--text-secondary));
+	cursor: default;
+}
+.icon-btn:disabled:hover,
+.calendar-title-btn:disabled:hover {
+	background: transparent;
+}
+.calendar-divider {
+	height: 1px;
+	margin: 8px -12px;
+	background: var(--ctrl-border-rest, var(--ctrl-border));
+}
+.calendar-view-body {
+	position: relative;
+	height: 268px;
+	overflow: hidden;
+}
+.calendar-panel {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+}
+.calendar-panel-forward {
+	animation: calendar-view-enter-forward 333ms cubic-bezier(0.1, 0.9, 0.2, 1) both;
+}
+.calendar-panel-backward {
+	animation: calendar-view-enter-backward 333ms cubic-bezier(0.1, 0.9, 0.2, 1) both;
+}
+.calendar-panel-out {
+	animation: calendar-view-enter-out 333ms cubic-bezier(0.1, 0.9, 0.2, 1) both;
+}
+.calendar-panel-in {
+	animation: calendar-view-enter-in 333ms cubic-bezier(0.1, 0.9, 0.2, 1) both;
+}
+.calendar-day-headers {
+	display: grid;
+	min-width: 280px;
+	flex-shrink: 0;
+	grid-template-columns: repeat(7, minmax(40px, 1fr));
+}
+.calendar-day-header {
+	display: flex;
+	height: 28px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-primary);
+	font-size: 12px;
+	font-weight: 600;
+}
+.calendar-scroll {
+	min-height: 0;
+	flex: 1;
+}
+.calendar-scroll .win-scroll-viewer-viewport {
+	scroll-behavior: smooth;
+}
+.large-scroll {
+	height: 240px;
+	margin: auto 0;
+}
+.calendar-grid {
+	display: grid;
+	min-width: 280px;
+	grid-template-columns: repeat(7, minmax(40px, 1fr));
+}
+.calendar-large-grid {
+	display: grid;
+	width: 100%;
+	grid-auto-rows: 65px;
+	grid-template-columns: repeat(4, 1fr);
+}
+.calendar-day,
+.calendar-large-btn {
+	position: relative;
+	box-sizing: border-box;
+	color: var(--text-primary);
+	font-size: 14px;
+	background: transparent;
+	border: 1px solid transparent;
+	cursor: pointer;
+}
+.calendar-day {
+	display: flex;
+	width: 40px;
+	min-width: 40px;
+	height: 40px;
+	min-height: 40px;
+	align-items: center;
+	justify-content: center;
+	justify-self: center;
+	padding: 0;
+	border-radius: 20px;
+}
+.calendar-large-btn {
+	display: flex;
+	width: 56px;
+	height: 56px;
+	min-height: 56px;
+	align-items: center;
+	justify-content: center;
+	justify-self: center;
+	flex-direction: column;
+	margin: auto;
+	padding: 0;
+	border-radius: 50%;
+}
+.calendar-day:hover,
+.calendar-large-btn:hover {
+	background: var(--subtle-secondary);
+}
+.calendar-day:disabled,
+.calendar-large-btn:disabled {
+	color: var(--text-disabled, var(--text-secondary));
+	cursor: default;
+}
+.calendar-day:disabled:hover,
+.calendar-large-btn:disabled:hover {
+	background: transparent;
+}
+.out-of-scope {
+	color: var(--text-disabled);
+}
+.hidden {
+	visibility: hidden;
+}
+.calendar-day.today::before {
+	position: absolute;
+	inset: 1px;
+	content: "";
+	background: var(--accent-base);
+	border-radius: 50%;
+}
+.calendar-day.today .day-text,
+.calendar-day.today .group-label {
+	position: relative;
+	z-index: 1;
+	color: var(--accent-text);
+}
+.calendar-day.selected:not(.today),
+.calendar-large-btn.selected:not(.current) {
+	color: var(--accent-base);
+	border-color: var(--accent-base);
+}
+.calendar-day.today.selected {
+	border-color: var(--accent-base);
+}
+.calendar-large-btn.current {
+	color: var(--accent-text);
+	background: var(--accent-base);
+}
+.calendar-large-btn.current .group-label {
+	color: var(--accent-text);
+}
+.group-label {
+	position: absolute;
+	top: 2px;
+	left: 50%;
+	color: var(--text-secondary);
+	font-size: 8px;
+	line-height: 1;
+	pointer-events: none;
+	transform: translateX(-50%);
+}
+.calendar-large-btn .group-label {
+	top: 6px;
+}
+.label-accent {
+	color: var(--accent-base) !important;
+}
+@keyframes calendar-view-enter-forward {
+	from {
+		opacity: 0;
+		transform: translateX(16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes calendar-view-enter-backward {
+	from {
+		opacity: 0;
+		transform: translateX(-16px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+@keyframes calendar-view-enter-out {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@keyframes calendar-view-enter-in {
+	from {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.calendar-scroll .win-scroll-viewer-viewport {
+		scroll-behavior: auto;
+	}
+}

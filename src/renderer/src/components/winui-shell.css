@@ -1,0 +1,798 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 窗口外壳：TitleBar、SplitView、选择器和日期时间控件 */
+
+.win-titlebar {
+	--TitleBarCompactHeight: 32px;
+	--TitleBarExpandedHeight: 48px;
+	--TitleBarBackButtonWidth: 40px;
+	--TitleBarPaneToggleButtonWidth: 40px;
+	--TitleBarLeftPaddingWidth: 2px;
+	--TitleBarRightPaddingWidth: 0px;
+	--TitleBarLeftHeaderPaddingWidth: 14px;
+	--TitleBarHeaderNegativeInsetPaddingWidth: 2px;
+	--TitleBarMinDragRegionWidth: 48px;
+	--TitleBarDeactivatedOpacity: 0.5;
+	--TitleBarCompactContentMargin: 0 16px 0 0;
+	--TitleBarIconMaxWidth: 16px;
+	--TitleBarIconMaxHeight: 16px;
+	--TitleBarIconMargin: 0 16px 0 0;
+	--TitleBarTitleMargin: 0 8px 0 0;
+	--TitleBarSubtitleMargin: 0 16px 0 0;
+	--TitleBarForegroundBrush: var(--text-primary);
+	--TitleBarDeactivatedForegroundBrush: var(--text-tertiary);
+	--TitleBarSubtitleForegroundBrush: var(--text-secondary);
+	--TitleBarSubtitleDeactivatedForegroundBrush: var(--text-tertiary);
+	--TitleBarBackButtonBackground: transparent;
+	--TitleBarBackButtonBackgroundPointerOver: var(--subtle-secondary);
+	--TitleBarBackButtonBackgroundPressed: var(--subtle-tertiary);
+	--TitleBarBackButtonForegroundDisabled: var(--text-disabled);
+	position: fixed;
+	top: env(titlebar-area-y, 0);
+	left: env(titlebar-area-x, 0);
+	display: grid;
+	box-sizing: border-box;
+	width: env(titlebar-area-width, 100%);
+	height: max(env(titlebar-area-height, 0px), var(--TitleBarExpandedHeight));
+	align-items: stretch;
+	overflow: hidden;
+	grid-template-columns:
+		var(--TitleBarLeftPaddingWidth) auto auto auto var(--TitleBarLeftHeaderPaddingWidth)
+		auto auto auto 1fr auto var(--TitleBarMinDragRegionWidth) var(--TitleBarRightPaddingWidth);
+	color: var(--TitleBarForegroundBrush);
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+	user-select: none;
+	background: transparent;
+	z-index: 9999;
+	-webkit-app-region: drag;
+}
+.win-titlebar.is-compact-height {
+	height: max(env(titlebar-area-height, 0px), var(--TitleBarCompactHeight));
+}
+.win-titlebar.is-negative-inset-spacing {
+	--TitleBarLeftHeaderPaddingWidth: var(--TitleBarHeaderNegativeInsetPaddingWidth);
+}
+.win-titlebar-left-padding {
+	grid-column: 1;
+}
+.win-titlebar-back-button {
+	grid-column: 2;
+}
+.win-titlebar-pane-toggle-button {
+	grid-column: 3;
+}
+.win-titlebar-left-header {
+	grid-column: 4;
+}
+.win-titlebar-left-header-padding {
+	grid-column: 5;
+}
+.win-titlebar-icon {
+	grid-column: 6;
+}
+.win-titlebar-title {
+	grid-column: 7;
+}
+.win-titlebar-subtitle {
+	grid-column: 8;
+}
+.win-titlebar-content {
+	grid-column: 9;
+}
+.win-titlebar-right-header {
+	grid-column: 10;
+}
+.win-titlebar-min-drag-region {
+	grid-column: 11;
+}
+.win-titlebar-right-padding {
+	grid-column: 12;
+}
+.win-titlebar-back-button,
+.win-titlebar-pane-toggle-button {
+	display: flex;
+	box-sizing: border-box;
+	width: var(--TitleBarBackButtonWidth);
+	min-width: var(--TitleBarBackButtonWidth);
+	align-items: center;
+	justify-content: center;
+	margin: 2px;
+	padding: 0;
+	color: var(--TitleBarForegroundBrush);
+	font-family: var(--SymbolThemeFontFamily, "Segoe Fluent Icons", sans-serif);
+	font-size: 16px;
+	background: var(--TitleBarBackButtonBackground);
+	border: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: pointer;
+	transition:
+		background var(--fast-duration, 167ms) var(--fast-out-slow-in, ease),
+		color var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-titlebar-pane-toggle-button {
+	width: var(--TitleBarPaneToggleButtonWidth);
+}
+.win-titlebar-back-button .icon,
+.win-titlebar-pane-toggle-button .icon {
+	display: flex;
+	width: 16px;
+	height: 16px;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	line-height: 16px;
+}
+.win-titlebar-back-button .animated-icon-back {
+	font-size: 11px;
+}
+.win-titlebar-back-button:hover:not(:disabled),
+.win-titlebar-pane-toggle-button:hover {
+	background: var(--TitleBarBackButtonBackgroundPointerOver);
+}
+.win-titlebar-back-button:active:not(:disabled),
+.win-titlebar-pane-toggle-button:active,
+.win-titlebar-back-button.pressed,
+.win-titlebar-pane-toggle-button.pressed {
+	color: var(--text-secondary);
+	background: var(--TitleBarBackButtonBackgroundPressed);
+}
+.win-titlebar-back-button:disabled {
+	color: var(--TitleBarBackButtonForegroundDisabled);
+	cursor: default;
+}
+.win-titlebar.is-deactivated .win-titlebar-back-button,
+.win-titlebar.is-deactivated .win-titlebar-pane-toggle-button {
+	color: var(--TitleBarDeactivatedForegroundBrush);
+}
+.win-titlebar-left-header,
+.win-titlebar-right-header {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	align-items: center;
+}
+.win-titlebar.is-deactivated .win-titlebar-left-header,
+.win-titlebar.is-deactivated .win-titlebar-right-header,
+.win-titlebar.is-deactivated .win-titlebar-content,
+.win-titlebar.is-deactivated .win-titlebar-icon {
+	opacity: var(--TitleBarDeactivatedOpacity);
+}
+.win-titlebar-icon {
+	display: flex;
+	min-width: var(--TitleBarIconMaxWidth);
+	min-height: var(--TitleBarIconMaxHeight);
+	max-width: var(--TitleBarIconMaxWidth);
+	max-height: var(--TitleBarIconMaxHeight);
+	align-items: center;
+	justify-content: center;
+	align-self: center;
+	margin: var(--TitleBarIconMargin);
+	overflow: hidden;
+}
+.win-titlebar-icon img,
+.win-titlebar-icon-glyph {
+	display: block;
+	max-width: 100%;
+	max-height: 100%;
+	font-size: 16px;
+	line-height: 1;
+}
+.win-titlebar-icon-glyph {
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+}
+.win-titlebar-title,
+.win-titlebar-subtitle {
+	min-width: 0;
+	max-width: 100%;
+	align-self: center;
+	overflow: hidden;
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 16px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.win-titlebar-title {
+	margin: var(--TitleBarTitleMargin);
+	color: var(--TitleBarForegroundBrush);
+}
+.win-titlebar-subtitle {
+	margin: var(--TitleBarSubtitleMargin);
+	color: var(--TitleBarSubtitleForegroundBrush);
+}
+.win-titlebar.is-deactivated .win-titlebar-title {
+	color: var(--TitleBarDeactivatedForegroundBrush);
+}
+.win-titlebar.is-deactivated .win-titlebar-subtitle {
+	color: var(--TitleBarSubtitleDeactivatedForegroundBrush);
+}
+.win-titlebar-content {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+	align-items: center;
+	overflow: hidden;
+}
+.win-titlebar-content.is-content-stretch > * {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+.win-titlebar-min-drag-region {
+	min-width: var(--TitleBarMinDragRegionWidth);
+}
+.win-titlebar button,
+.win-titlebar input,
+.win-titlebar select,
+.win-titlebar textarea,
+.win-titlebar a[href],
+.win-titlebar [role="button"],
+.win-titlebar [tabindex]:not([tabindex="-1"]),
+.win-titlebar [contenteditable="true"] {
+	-webkit-app-region: no-drag;
+}
+.win-titlebar [IsDragRegion="true"] {
+	-webkit-app-region: drag !important;
+}
+.win-titlebar [IsDragRegion="false"] {
+	-webkit-app-region: no-drag !important;
+}
+
+.win-breadcrumb-bar {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	overflow: hidden;
+	color: var(--text-primary);
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+	font-size: var(--ControlContentThemeFontSize, 14px);
+}
+.win-breadcrumb-bar.disabled {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.win-breadcrumb-items-repeater {
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	align-items: stretch;
+	overflow: hidden;
+	white-space: nowrap;
+}
+.win-breadcrumb-layout-root {
+	display: grid;
+	box-sizing: border-box;
+	flex: 0 0 auto;
+	align-items: center;
+	color: var(--text-primary);
+	border-radius: var(--ControlCornerRadius, 4px);
+	grid-template-columns: auto auto;
+}
+.win-breadcrumb-layout-root.is-crumbled {
+	position: fixed;
+	top: -10000px;
+	left: -10000px;
+	visibility: hidden;
+	pointer-events: none;
+}
+.win-breadcrumb-item-button {
+	box-sizing: border-box;
+	width: auto;
+	min-width: 0;
+	min-height: 0;
+	height: auto;
+	justify-content: flex-start;
+	gap: 0;
+	padding: 3px 1px;
+	color: inherit;
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: 400;
+	line-height: 20px;
+	background: transparent;
+	border: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: pointer;
+}
+.win-breadcrumb-item-button:hover {
+	color: var(--text-secondary);
+	background: transparent;
+}
+.win-breadcrumb-item-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}
+.win-breadcrumb-item-button:focus-visible,
+.win-breadcrumb-current-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -1px;
+}
+.win-breadcrumb-item-content {
+	color: inherit;
+	font: inherit;
+	line-height: 20px;
+	white-space: nowrap;
+}
+.win-breadcrumb-current-item {
+	display: flex;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 26px;
+	align-items: center;
+	padding: 3px 1px;
+	color: var(--text-primary);
+	font-size: inherit;
+	font-weight: 400;
+	line-height: 20px;
+	border-radius: var(--ControlCornerRadius, 4px);
+	outline: none;
+}
+.win-breadcrumb-current-item[aria-disabled="true"] {
+	color: var(--text-disabled);
+}
+.win-breadcrumb-chevron {
+	align-self: center;
+	padding: 0 2px;
+	color: var(--text-primary);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 20px;
+	white-space: nowrap;
+}
+.win-breadcrumb-ellipsis-glyph {
+	padding: 3px;
+	color: inherit;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-menu-flyout:has(.win-breadcrumb-flyout-items) {
+	min-height: 40px;
+	max-width: min(320px, calc(100vw - 16px));
+	padding: 2px 0;
+}
+.win-breadcrumb-flyout-items {
+	display: flex;
+	min-width: max-content;
+	flex-direction: column;
+}
+
+.win-split-view {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	background: transparent;
+}
+.win-split-view.placement-right {
+	flex-direction: row-reverse;
+}
+.win-split-view .split-view-pane {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	width: 0;
+	min-width: 0;
+	height: 100%;
+	flex-shrink: 0;
+	justify-content: flex-start;
+	overflow: hidden;
+	background: var(--layer-default, transparent);
+	border-right: 1px solid var(--stroke-divider, transparent);
+	transition:
+		width 200ms cubic-bezier(0.33, 1, 0.68, 1),
+		background-color 120ms ease;
+}
+.win-split-view.placement-right .split-view-pane {
+	justify-content: flex-end;
+	border-right: 0;
+	border-left: 1px solid var(--stroke-divider, transparent);
+}
+.win-split-view.mode-compact-inline .split-view-pane,
+.win-split-view.mode-compact-overlay .split-view-pane {
+	width: var(--SplitViewCompactPaneLength, 48px);
+}
+.win-split-view.mode-inline.is-open .split-view-pane,
+.win-split-view.mode-compact-inline.is-open .split-view-pane,
+.win-split-view.mode-overlay.is-open .split-view-pane,
+.win-split-view.mode-compact-overlay.is-open .split-view-pane {
+	width: var(--SplitViewOpenPaneLength, 256px);
+}
+.win-split-view.mode-overlay .split-view-pane,
+.win-split-view.mode-compact-overlay .split-view-pane {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 10;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+.win-split-view.mode-overlay.placement-left .split-view-pane,
+.win-split-view.mode-compact-overlay.placement-left .split-view-pane {
+	left: 0;
+}
+.win-split-view.mode-overlay.placement-right .split-view-pane,
+.win-split-view.mode-compact-overlay.placement-right .split-view-pane {
+	right: 0;
+}
+.win-split-view.mode-overlay:not(.is-open) .split-view-pane,
+.win-split-view.mode-compact-overlay:not(.is-open) .split-view-pane {
+	box-shadow: none;
+}
+.win-split-view .split-view-pane-inner {
+	display: flex;
+	box-sizing: border-box;
+	min-width: 0;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+.win-split-view .split-view-content-host {
+	display: flex;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
+	height: 100%;
+	flex: 1 1 auto;
+}
+.win-split-view .split-view-content {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+}
+
+.win-calendar-date-picker,
+.win-date-picker {
+	position: relative;
+	display: inline-flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 8px;
+}
+.win-calendar-date-picker .picker-header,
+.win-date-picker .picker-header {
+	margin: 0 0 8px;
+	color: var(--text-primary);
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-calendar-date-picker .picker-description {
+	margin-top: 4px;
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 16px;
+}
+.calendar-date-picker-button {
+	display: grid;
+	grid-template-columns: minmax(0, auto) 32px;
+	min-width: 0;
+	height: 32px;
+	gap: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.calendar-date-picker-button .picker-text {
+	min-width: 0;
+	overflow: hidden;
+	padding: 0 12px 2px;
+	color: var(--text-primary);
+	font-size: 14px;
+	line-height: 20px;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.calendar-date-picker-button .picker-text.placeholder,
+.win-date-picker .picker-btn.has-no-date {
+	color: var(--text-secondary);
+}
+.calendar-date-picker-button .picker-icon {
+	width: 32px;
+	color: var(--text-secondary);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 32px;
+	text-align: center;
+}
+.picker-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 99;
+}
+.picker-flyout {
+	position: fixed;
+	z-index: 100;
+	isolation: isolate;
+	background: var(--flyout-bg, var(--layer-default));
+	border: 1px solid var(--stroke-surface-flyout, var(--ctrl-border));
+	border-radius: 8px;
+	box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
+	-webkit-backdrop-filter: var(--flyout-backdrop);
+	backdrop-filter: var(--flyout-backdrop);
+}
+.calendar-picker-flyout {
+	min-width: 304px;
+}
+.win-time-picker .picker-header {
+	margin: 0 0 8px;
+	color: var(--text-primary);
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-time-picker .picker-btn {
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	width: 242px;
+	min-width: 242px;
+	height: 32px;
+	padding: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.win-time-picker .picker-column-text {
+	display: flex;
+	min-width: 0;
+	height: 100%;
+	flex: 1 1 0;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	border-right: 1px solid var(--ctrl-border, var(--stroke-divider));
+}
+.win-time-picker .picker-column-text:last-child {
+	border-right: 0;
+}
+.win-time-picker .picker-btn.has-no-time {
+	color: var(--text-secondary);
+}
+.win-time-picker .picker-description {
+	margin-top: 4px;
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 16px;
+}
+.time-picker-flyout {
+	display: flex;
+	width: 242px;
+	max-height: 398px;
+	flex-direction: column;
+	overflow: hidden;
+}
+.time-picker-flyout .picker-col-flex {
+	flex: 1 1 0;
+}
+.calendar-picker-view {
+	--calendar-view-fill: transparent;
+	--calendar-view-backdrop: none;
+	border: 0;
+}
+.date-picker-flyout {
+	display: flex;
+	width: 296px;
+	max-height: 398px;
+	flex-direction: column;
+	overflow: hidden;
+}
+.win-date-picker .picker-btn {
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	width: 296px;
+	min-width: 296px;
+	height: 32px;
+	padding: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.win-date-picker .picker-column-text {
+	display: flex;
+	min-width: 0;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	border-right: 1px solid var(--ctrl-border, var(--stroke-divider));
+}
+.win-date-picker .picker-column-text:first-child {
+	flex: 132 1 0;
+	justify-content: flex-start;
+	padding-left: 12px;
+}
+.win-date-picker .picker-column-text:not(:first-child) {
+	flex: 78 1 0;
+}
+.win-date-picker .picker-column-text:last-child {
+	border-right: 0;
+}
+.picker-columns {
+	position: relative;
+	display: flex;
+	height: 280px;
+	overflow: hidden;
+}
+.picker-columns::before {
+	position: absolute;
+	top: 50%;
+	right: 4px;
+	left: 4px;
+	height: 40px;
+	z-index: 0;
+	content: "";
+	background: var(--accent-base, var(--accent-aa-fill));
+	border-radius: 4px;
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+.picker-columns > * {
+	position: relative;
+	z-index: 1;
+	min-width: 0;
+}
+.win-date-picker .picker-month {
+	flex: 132 1 0;
+	--picker-item-justify: flex-start;
+	--picker-item-padding-left: 9px;
+}
+.win-date-picker .picker-day,
+.win-date-picker .picker-year {
+	flex: 78 1 0;
+	--picker-item-justify: center;
+}
+.picker-actions {
+	display: flex;
+	height: 41px;
+	border-top: 1px solid var(--stroke-divider);
+}
+.picker-action-btn {
+	min-width: 0;
+	flex: 1;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+}
+.picker-col-root {
+	position: relative;
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	overflow: hidden;
+}
+.picker-col-scroll {
+	min-width: 0;
+	height: 280px;
+	flex: 1 1 auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: none;
+	scroll-snap-type: y mandatory;
+	overscroll-behavior: contain;
+	touch-action: pan-y;
+	outline: none;
+}
+.picker-col-scroll::-webkit-scrollbar {
+	display: none;
+}
+.picker-col-scroll:focus-visible {
+	box-shadow: inset 0 0 0 1px var(--accent-base, var(--accent-aa-fill));
+}
+.picker-list {
+	position: relative;
+	width: 100%;
+}
+.picker-item {
+	display: flex;
+	box-sizing: border-box;
+	width: 100%;
+	height: 40px;
+	min-height: 40px;
+	align-items: center;
+	justify-content: var(--picker-item-justify, center);
+	padding: 3px var(--picker-item-padding-right, 0) 6px var(--picker-item-padding-left, 0);
+	position: relative;
+	color: var(--text-secondary);
+	font-size: 14px;
+	line-height: 20px;
+	border-radius: 4px;
+	scroll-snap-align: start;
+	transition: color 100ms ease;
+	isolation: isolate;
+}
+.picker-item:hover {
+	color: var(--text-primary);
+}
+.picker-item::before {
+	position: absolute;
+	inset: 2px 4px;
+	z-index: -1;
+	content: "";
+	border-radius: 4px;
+}
+.picker-item:hover::before {
+	background: var(--subtle-secondary);
+}
+.picker-mask {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	left: 0;
+	height: 40px;
+	z-index: 2;
+	overflow: hidden;
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+.picker-mask-list {
+	position: absolute;
+	top: -120px;
+	right: 0;
+	left: 0;
+	will-change: transform;
+}
+.picker-mask-item,
+.picker-mask-item:hover {
+	color: var(--accent-aa-text, var(--accent-text));
+}
+.picker-mask-item::before {
+	display: none;
+}
+.picker-mask-item {
+	display: flex;
+	box-sizing: border-box;
+	height: 40px;
+	align-items: center;
+	justify-content: var(--picker-item-justify, center);
+	padding: 3px var(--picker-item-padding-right, 0) 6px var(--picker-item-padding-left, 0);
+	color: var(--accent-aa-text, var(--accent-text));
+	font-size: 14px;
+	line-height: 20px;
+}
+.picker-mask-item.settled::before {
+	display: block;
+	position: absolute;
+	inset: 2px 4px;
+	z-index: -1;
+	content: "";
+	background: rgb(255 255 255 / 14%);
+	border-radius: 4px;
+}
+.picker-arrow {
+	position: absolute;
+	right: 0;
+	left: 0;
+	height: 34px;
+	z-index: 3;
+	min-height: 0;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 8px;
+	background: var(--ctrl-solid-fill, transparent);
+	border-radius: 0;
+	opacity: 0;
+	transition: opacity 120ms ease;
+}
+.picker-arrow-hidden {
+	display: none;
+}
+.picker-col-root:hover .picker-arrow,
+.picker-col-root:focus-within .picker-arrow {
+	opacity: 1;
+}
+.picker-arrow-up {
+	top: 0;
+}
+.picker-arrow-down {
+	bottom: 0;
+}

@@ -1,0 +1,963 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 媒体与提示：MediaPlayer、TeachingTip、Swipe、SemanticZoom 和刷新交互 */
+
+.win-media-player-element {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	overflow: visible;
+}
+.win-media-player-element:fullscreen {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483647;
+	width: 100vw !important;
+	height: 100vh !important;
+	max-width: none !important;
+	max-height: none !important;
+	margin: 0 !important;
+	background: #000;
+}
+.win-media-player-surface {
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	overflow: hidden;
+	background: #000;
+	border: 1px solid var(--card-stroke, transparent);
+}
+.win-media-player-element:fullscreen .win-media-player-surface {
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+.win-media-player-video {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 120px;
+	aspect-ratio: 16 / 9;
+	background: #000;
+}
+.win-media-player-element:fullscreen .win-media-player-video {
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	aspect-ratio: auto;
+}
+.win-media-player-video.is-media-error {
+	opacity: 0;
+}
+.win-media-player-poster-fallback {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background: #000;
+}
+.win-media-transport-controls {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 300ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+.win-media-transport-controls.visible {
+	pointer-events: auto;
+	opacity: 1;
+}
+.win-media-transport-panel {
+	position: relative;
+	display: grid;
+	box-sizing: border-box;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	grid-template-rows: auto auto auto;
+	isolation: isolate;
+	width: min(720px, calc(100% - 24px));
+	min-width: min(296px, calc(100% - 24px));
+	margin: 0 12px 12px;
+	overflow: visible;
+	color: var(--MediaTransportControlsFillMediaText, var(--text-primary, currentColor));
+	background: transparent;
+	border: 1px solid
+		var(--MediaTransportControlsBorderBrush, var(--surface-stroke-color-flyout, transparent));
+	border-radius: var(--overlay-corner-radius, 8px);
+	-webkit-backdrop-filter: blur(30px);
+	backdrop-filter: blur(30px);
+	transform: translateY(50px);
+	transition: transform 300ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+.win-media-transport-panel::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	background: var(
+		--MediaTransportControlsPanelBackground,
+		var(--flyout-bg, var(--layer-default, transparent))
+	);
+	border-radius: inherit;
+	pointer-events: none;
+}
+.win-media-transport-controls.visible .win-media-transport-panel {
+	transform: translateY(0.5px);
+}
+.win-media-error {
+	grid-column: 1 / -1;
+	grid-row: 1;
+	box-sizing: border-box;
+	width: 320px;
+	height: 96px;
+	justify-self: center;
+	align-self: center;
+	padding: 12px;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+}
+.win-media-timeline-border {
+	display: block;
+	grid-column: 2;
+	grid-row: 2;
+	box-sizing: border-box;
+	width: 100%;
+}
+.win-media-timeline-grid {
+	display: grid;
+	grid-template-rows: 35px 16px;
+	width: 100%;
+}
+.win-media-progress-host {
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	height: 35px;
+	padding: 0;
+}
+.win-media-progress-slider {
+	display: block;
+	box-sizing: border-box;
+	width: calc(100% - 14px);
+	height: 32px;
+	margin: 2px 7px 1px;
+}
+.win-media-progress-slider > .win-slider-root {
+	display: block;
+	width: 100%;
+}
+.win-media-progress-slider .win-slider {
+	width: 100% !important;
+	height: 32px !important;
+}
+.win-media-loading-progress {
+	position: absolute;
+	top: 2px;
+	left: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 4px;
+	pointer-events: none;
+}
+.win-media-loading-progress > .win-progress-bar {
+	display: block;
+	width: 100%;
+	height: 4px;
+}
+.win-media-time-text-grid {
+	display: flex;
+	box-sizing: border-box;
+	height: 16px;
+	margin: 0 7px 2px;
+	align-items: center;
+	justify-content: space-between;
+	color: var(--MediaTransportControlsFillTimeElapsedText, var(--text-secondary, currentColor));
+	font-size: 12px;
+	font-variant-numeric: tabular-nums;
+	line-height: 16px;
+}
+.win-media-command-border {
+	display: block;
+	grid-column: 2;
+	grid-row: 3;
+	box-sizing: border-box;
+	width: 100%;
+}
+.win-media-command-bar {
+	position: relative;
+	display: grid;
+	box-sizing: border-box;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	min-height: 40px;
+	margin: 0 0 3px;
+}
+.win-media-transport-controls.is-media-loading .win-media-progress-slider,
+.win-media-transport-controls.is-media-loading .win-media-command-bar {
+	opacity: 0;
+	pointer-events: none;
+}
+.win-media-command-left,
+.win-media-command-center,
+.win-media-command-right {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+}
+.win-media-command-center {
+	position: absolute;
+	left: 50%;
+	justify-content: center;
+	transform: translateX(-50%);
+}
+.win-media-command-right {
+	justify-content: flex-end;
+}
+.win-media-appbar-button {
+	position: relative;
+	display: inline-flex;
+	box-sizing: border-box;
+	width: 40px;
+	height: 40px;
+	min-width: 40px;
+	min-height: 40px;
+	flex: 0 0 40px;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.win-media-appbar-button::before {
+	position: absolute;
+	inset: 5px;
+	content: "";
+	background: transparent;
+	border-radius: 4px;
+	pointer-events: none;
+}
+.win-media-appbar-button:hover::before {
+	background: var(--subtle-secondary, transparent);
+}
+.win-media-appbar-button:active::before {
+	background: var(--subtle-tertiary, transparent);
+}
+.win-media-appbar-button:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: -2px;
+}
+.win-media-glyph {
+	display: inline-flex;
+	width: 20px;
+	height: 16px;
+	align-items: center;
+	justify-content: center;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 16px;
+}
+.win-media-volume-wrapper {
+	position: relative;
+}
+.win-media-volume-panel {
+	display: flex;
+	box-sizing: border-box;
+	height: 62px;
+	align-items: center;
+	padding: 11px 3px;
+	background: transparent;
+}
+.win-media-volume-slider {
+	display: block;
+	flex: 0 0 190px;
+	width: 190px;
+	height: 32px;
+	margin: 0 8px 0 12px;
+}
+.win-media-volume-slider > .win-slider-root {
+	display: block;
+	width: 190px;
+}
+.win-media-volume-slider .win-slider {
+	width: 190px !important;
+	height: 32px !important;
+}
+.win-media-volume-value {
+	display: inline-flex;
+	width: 24px;
+	height: 20px;
+	align-items: center;
+	justify-content: flex-end;
+	margin: 0 16px 0 8px;
+	font-size: 12px;
+	line-height: 20px;
+	text-align: right;
+}
+.win-flyout:has(.win-media-volume-panel) {
+	min-width: 0;
+	padding: 0;
+	color: var(--text-primary);
+	background: transparent;
+	border-radius: var(--overlay-corner-radius, 8px);
+}
+.win-flyout:has(.win-media-volume-panel)::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	background: var(
+		--MediaTransportControlsFlyoutBackground,
+		var(--flyout-bg, var(--layer-default, transparent))
+	);
+	border-radius: inherit;
+	pointer-events: none;
+}
+.win-flyout:has(.win-media-volume-panel) .win-flyout-scroll {
+	max-height: none;
+}
+.win-rich-edit-box {
+	display: flex;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 32px;
+	flex-direction: column;
+	gap: 4px;
+	color: var(--text-primary);
+}
+.win-rich-edit-header {
+	color: var(--text-primary);
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-rich-edit-scroll {
+	box-sizing: border-box;
+	min-width: 0;
+	max-height: 100%;
+	overflow: auto;
+	background: var(--control-fill-rest, var(--ctrl-fill));
+	border: 1px solid var(--ctrl-border-rest, var(--ctrl-border));
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.win-rich-edit-box.focused .win-rich-edit-scroll {
+	border-color: var(--accent-base, var(--ctrl-border));
+	box-shadow: 0 0 0 1px var(--accent-base, transparent);
+}
+.win-rich-edit-editor {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 100%;
+	padding: 8px 12px;
+	color: inherit;
+	font: inherit;
+	line-height: 20px;
+	outline: none;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+.win-rich-edit-editor[contenteditable="false"] {
+	color: var(--text-secondary);
+	background: var(--control-fill-disabled, transparent);
+	cursor: default;
+}
+.win-rich-edit-editor:empty::before {
+	content: attr(data-placeholder);
+	color: var(--text-secondary);
+	pointer-events: none;
+}
+.win-rich-edit-editor ::selection,
+.win-rich-edit-editor::selection {
+	background: var(--reb-selection-background, var(--accent-base, rgb(0 103 192 / 35%)));
+}
+.win-rich-edit-description {
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 16px;
+}
+.win-teaching-tip {
+	position: fixed;
+	z-index: var(--win-teaching-tip-z-index, var(--win-tip-z-index, 2147483646));
+	box-sizing: border-box;
+	display: flex;
+	width: max-content;
+	min-width: min(320px, calc(100vw - 16px));
+	max-width: min(336px, calc(100vw - 16px));
+	min-height: 40px;
+	max-height: min(520px, calc(100vh - 16px));
+	flex-direction: column;
+	overflow: visible;
+	color: var(--TeachingTipForegroundBrush, var(--TextFillColorPrimaryBrush, var(--text-primary)));
+	--teaching-tip-background: var(
+		--TeachingTipBackgroundBrush,
+		var(--SolidBackgroundFillColorTertiaryBrush, var(--ctrl-fill-tertiary, var(--flyout-bg)))
+	);
+	--teaching-tip-border: var(
+		--TeachingTipBorderBrush,
+		var(
+			--SurfaceStrokeColorDefaultBrush,
+			var(
+				--ControlStrokeColorDefaultBrush,
+				var(--surface-stroke-color-flyout, var(--flyout-border))
+			)
+		)
+	);
+	isolation: isolate;
+	background: var(--teaching-tip-background);
+	border: 1px solid var(--teaching-tip-border);
+	border-radius: var(--OverlayCornerRadius, var(--overlay-corner-radius, 8px));
+	box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+	-webkit-backdrop-filter: var(--teaching-tip-backdrop, none);
+	backdrop-filter: var(--teaching-tip-backdrop, none);
+	animation: teaching-tip-enter 167ms cubic-bezier(0, 0, 0, 1) both;
+}
+.win-teaching-tip.is-light-dismiss {
+	--teaching-tip-background: var(
+		--TeachingTipTransientBackground,
+		var(--AcrylicInAppFillColorDefaultBrush, var(--flyout-bg))
+	);
+	--teaching-tip-backdrop: var(--flyout-backdrop);
+}
+.win-teaching-tip-main {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 12px;
+}
+.win-teaching-tip-hero {
+	height: 100px;
+	overflow: hidden;
+	flex: 0 0 auto;
+	background: transparent;
+	border-radius: var(--OverlayCornerRadius, var(--overlay-corner-radius, 8px))
+		var(--OverlayCornerRadius, var(--overlay-corner-radius, 8px)) 0 0;
+}
+.win-teaching-tip.hero-placement-bottom .win-teaching-tip-hero {
+	order: 3;
+	border-radius: 0 0 var(--OverlayCornerRadius, var(--overlay-corner-radius, 8px))
+		var(--OverlayCornerRadius, var(--overlay-corner-radius, 8px));
+}
+.win-teaching-tip.hero-placement-bottom .win-teaching-tip-main {
+	order: 1;
+}
+.win-teaching-tip.hero-placement-bottom .win-teaching-tip-actions {
+	order: 2;
+}
+.win-teaching-tip-hero > img,
+.win-teaching-tip-hero > video {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.win-teaching-tip-icon {
+	display: flex;
+	width: 20px;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-primary);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	line-height: 20px;
+}
+.win-teaching-tip-text {
+	min-width: 0;
+	flex: 1;
+}
+.win-teaching-tip-main.has-alternate-close .win-teaching-tip-text {
+	padding-right: 28px;
+}
+.win-teaching-tip-title {
+	color: var(
+		--TeachingTipTitleForegroundBrush,
+		var(--TextFillColorPrimaryBrush, var(--text-primary))
+	);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 20px;
+}
+.win-teaching-tip-subtitle,
+.win-teaching-tip-content {
+	margin-top: 0;
+	color: var(
+		--TeachingTipSubtitleForegroundBrush,
+		var(--TextFillColorPrimaryBrush, var(--text-primary))
+	);
+	font-size: 14px;
+	line-height: 20px;
+}
+.win-teaching-tip-close {
+	position: absolute;
+	top: 0;
+	right: 0;
+	display: inline-flex;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: inherit;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.win-teaching-tip-close:hover {
+	background: var(--subtle-secondary, rgb(128 128 128 / 14%));
+}
+.win-teaching-tip-actions {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	justify-content: stretch;
+	gap: 0;
+	padding: 0 12px 12px;
+}
+.win-teaching-tip-actions.both-buttons-visible {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	column-gap: 8px;
+}
+.win-teaching-tip-action-button,
+.win-teaching-tip-close-button {
+	width: 100%;
+	margin-top: 12px;
+}
+.win-teaching-tip-tail {
+	position: absolute;
+	left: var(--teaching-tip-tail-left, 160px);
+	z-index: 2;
+	width: 20px;
+	height: 10px;
+	display: block;
+	overflow: visible;
+	color: var(--stroke-surface-flyout, var(--ctrl-border));
+	transform: translateX(-50%);
+	pointer-events: none;
+	fill: var(--teaching-tip-background);
+	stroke: var(--teaching-tip-border);
+	stroke-width: 1;
+	stroke-linecap: butt;
+	stroke-linejoin: miter;
+}
+.win-teaching-tip-tail polyline {
+	fill: none;
+}
+.win-teaching-tip-tail polygon {
+	stroke: none;
+}
+.win-teaching-tip.placement-bottom .win-teaching-tip-tail {
+	top: -9px;
+}
+.win-teaching-tip.placement-bottom {
+	transform-origin: var(--teaching-tip-tail-left, 50%) 0;
+}
+.win-teaching-tip.placement-top .win-teaching-tip-tail {
+	bottom: -9px;
+}
+.win-teaching-tip.placement-top {
+	transform-origin: var(--teaching-tip-tail-left, 50%) 100%;
+}
+.win-teaching-tip-tail polygon {
+	stroke: none;
+}
+.win-teaching-tip[class~="placement-side-top"] .win-teaching-tip-tail {
+	top: auto;
+	bottom: -9px;
+}
+.win-teaching-tip[class~="placement-side-bottom"] .win-teaching-tip-tail {
+	top: -9px;
+	bottom: auto;
+}
+.win-teaching-tip[class~="placement-side-left"] .win-teaching-tip-tail {
+	top: var(--teaching-tip-tail-cross, 50%);
+	right: -9px;
+	bottom: auto;
+	left: auto;
+	transform: translateY(-50%) rotate(90deg);
+}
+.win-teaching-tip[class~="placement-side-right"] .win-teaching-tip-tail {
+	top: var(--teaching-tip-tail-cross, 50%);
+	right: auto;
+	bottom: auto;
+	left: -9px;
+	transform: translateY(-50%) rotate(-90deg);
+}
+@keyframes teaching-tip-enter {
+	from {
+		opacity: 0;
+		transform: scale(0.08);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-teaching-tip {
+		animation-duration: 0ms;
+	}
+}
+.win-swipe-control {
+	position: relative;
+	box-sizing: border-box;
+	min-width: 40px;
+	min-height: 40px;
+	overflow: hidden;
+	isolation: isolate;
+	color: var(--TextFillColorPrimaryBrush, var(--text-primary));
+	user-select: none;
+	touch-action: pan-y;
+}
+.swipe-content-root {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+	pointer-events: none;
+	will-change: clip-path;
+}
+.swipe-items-panel {
+	position: absolute;
+	display: flex;
+	will-change: transform;
+	transition: transform var(--normal-duration, 200ms)
+		var(--fast-out-slow-in, cubic-bezier(0, 0, 0, 1));
+}
+.side-left .swipe-items-panel {
+	top: 0;
+	bottom: 0;
+	left: 0;
+}
+.side-right .swipe-items-panel {
+	top: 0;
+	right: 0;
+	bottom: 0;
+}
+.side-top .swipe-items-panel {
+	top: 0;
+	right: 0;
+	left: 0;
+	flex-direction: column;
+}
+.side-bottom .swipe-items-panel {
+	right: 0;
+	bottom: 0;
+	left: 0;
+	flex-direction: column;
+}
+.swipe-item {
+	display: grid;
+	box-sizing: border-box;
+	min-width: 68px;
+	height: 100%;
+	min-height: 40px;
+	flex: 1 0 auto;
+	place-items: center;
+	padding: 0;
+	color: inherit;
+	font: inherit;
+	border: 0;
+	border-radius: 0;
+	cursor: default;
+	pointer-events: auto;
+	transition:
+		background-color var(--faster-duration, 83ms) linear,
+		color var(--faster-duration, 83ms) linear;
+}
+.side-left .swipe-item,
+.side-right .swipe-item {
+	width: 68px;
+}
+.side-top .swipe-item,
+.side-bottom .swipe-item {
+	width: 100%;
+	height: 60px;
+}
+.mode-execute .swipe-item {
+	width: 100%;
+	height: 100%;
+}
+.swipe-item:active {
+	background: var(--SwipeItemBackgroundPressed, var(--subtle-pressed)) !important;
+}
+.swipe-item:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: -3px;
+}
+.swipe-item-content {
+	display: grid;
+	grid-template-rows: auto auto;
+	min-width: 16px;
+	place-items: center;
+	margin: 4px 4px 2px;
+	text-align: center;
+}
+.swipe-item-icon {
+	display: block;
+	width: 16px;
+	height: 16px;
+	margin-bottom: 2px;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	line-height: 16px;
+}
+.swipe-item-bitmap {
+	display: block;
+	width: 16px;
+	height: 16px;
+	margin-bottom: 2px;
+	background: currentColor;
+	-webkit-mask: var(--swipe-item-bitmap-source) center / contain no-repeat;
+	mask: var(--swipe-item-bitmap-source) center / contain no-repeat;
+}
+.swipe-item:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+	opacity: 0.6;
+}
+.swipe-item-text {
+	max-width: 64px;
+	font-size: 12px;
+	line-height: 16px;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+.swipe-control-content {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: inherit;
+	border-style: solid;
+	will-change: transform;
+	transition: transform 200ms cubic-bezier(0, 0, 0, 1);
+}
+.win-swipe-control.interacting .swipe-control-content,
+.win-swipe-control.interacting .swipe-items-panel {
+	transition: none;
+}
+.win-semantic-zoom {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	border: 0 solid transparent;
+	isolation: isolate;
+	touch-action: pan-x pan-y;
+}
+.semantic-zoom-surface,
+.semantic-zoom-presenter {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+.semantic-zoom-scroll-viewer {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+.semantic-zoom-surface {
+	display: grid;
+	overflow: hidden;
+	border: 0 solid transparent;
+}
+.semantic-zoom-presenter {
+	display: block;
+	overflow: hidden;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transform-origin: 50% 50%;
+	will-change: opacity;
+	transition:
+		opacity 167ms cubic-bezier(0.17, 0.17, 0, 1),
+		visibility 0ms linear 167ms;
+}
+.zoomed-in .zoomed-in-presenter,
+.zoomed-out .zoomed-out-presenter {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition:
+		opacity 167ms cubic-bezier(0.17, 0.17, 0, 1),
+		visibility 0ms linear 0ms;
+}
+.is-changing-view .semantic-zoom-presenter {
+	visibility: visible;
+	transition: none;
+}
+.is-manipulating .semantic-zoom-presenter {
+	will-change: opacity, transform;
+	transition: none;
+}
+.zoom-out-button {
+	position: absolute;
+	right: 19px;
+	bottom: 19px;
+	z-index: 2;
+	display: grid;
+	box-sizing: border-box;
+	width: 12px;
+	height: 12px;
+	min-width: 12px;
+	min-height: 12px;
+	place-items: center;
+	padding: 0;
+	overflow: hidden;
+	color: var(--ButtonForeground, var(--text-primary));
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 4px;
+	background: var(--ButtonBackground, var(--ctrl-fill-default, rgb(255 255 255 / 20%)));
+	border: 1px solid var(--ButtonBorderBrush, var(--ctrl-border, transparent));
+	border-radius: 0;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition:
+		opacity 167ms linear,
+		visibility 0ms linear 167ms,
+		background-color 83ms linear,
+		transform 83ms linear;
+}
+.zoom-out-button.visible {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition-delay: 0ms;
+}
+.is-changing-view .zoom-out-button {
+	transition: none;
+}
+.zoom-out-button:hover {
+	border-color: var(--ButtonBorderBrushPointerOver, var(--ctrl-border));
+	background: var(--ButtonBackgroundPointerOver, var(--ctrl-fill-secondary));
+	color: var(--ButtonForegroundPointerOver, var(--text-primary));
+}
+.zoom-out-button:active {
+	border-color: var(--ButtonBorderBrushPressed, var(--ctrl-border));
+	background: var(--ButtonBackgroundPressed, var(--ctrl-fill-tertiary));
+	color: var(--ButtonForegroundPressed, var(--text-secondary));
+	transform: scale(0.96);
+}
+.zoom-out-button:disabled {
+	border-color: var(--ButtonBorderBrushDisabled, transparent);
+	background: var(--ButtonBackgroundDisabled, var(--ctrl-fill-disabled));
+	color: var(--ButtonForegroundDisabled, var(--text-disabled));
+}
+.win-semantic-zoom.is-disabled {
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.semantic-zoom-presenter,
+	.zoom-out-button {
+		transition-duration: 0ms;
+	}
+}
+.win-parallax-view {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+}
+.parallax-child {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+	will-change: transform;
+	pointer-events: none;
+	backface-visibility: hidden;
+	perspective: 1000px;
+}
+.parallax-source {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
+.win-pull-to-refresh {
+	position: relative;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 40px;
+	overflow: hidden;
+}
+.ptr-indicator {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 10;
+	display: flex;
+	height: 32px;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	will-change: transform;
+}
+.ptr-icon-wrapper {
+	display: flex;
+	width: 24px;
+	height: 24px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-primary);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 20px;
+	line-height: 0;
+	transform-origin: center;
+	will-change: transform, opacity;
+}
+.ptr-icon-wrapper.is-refreshing {
+	animation: ptr-spin 800ms linear infinite;
+}
+.ptr-content {
+	position: relative;
+	min-width: 0;
+	will-change: transform;
+}
+@keyframes ptr-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

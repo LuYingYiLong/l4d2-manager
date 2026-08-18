@@ -1,0 +1,557 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 命令栏：CommandBar、AppBarButton 和相关交互状态 */
+
+/* CommandBar/AppBarButton surface translated from WinUIonWeb. */
+.win-appbar-button {
+	position: relative;
+	display: inline-grid;
+	width: 68px;
+	min-width: 68px;
+	height: auto;
+	min-height: 64px;
+	box-sizing: border-box;
+	place-items: stretch;
+	align-self: start;
+	justify-self: start;
+	overflow: visible;
+	padding: 0;
+	color: var(--AppBarButtonForeground, var(--text-primary));
+	font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 20px;
+	user-select: none;
+	background: transparent;
+	border: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: default;
+	transition:
+		background-color var(--faster-duration, 83ms) linear,
+		color var(--faster-duration, 83ms) linear;
+}
+.appbar-button-inner-border {
+	position: absolute;
+	inset: 6px 2px;
+	border: var(--AppBarButtonBorderThickness, 0) solid var(--AppBarButtonBorderBrush, transparent);
+	border-radius: var(--AppBarButtonCornerRadius, var(--ControlCornerRadius, 4px));
+	background: var(--AppBarButtonBackground, transparent);
+	transition: background-color var(--faster-duration, 83ms) linear;
+}
+.win-appbar-button.pointer-over {
+	color: var(--AppBarButtonForegroundPointerOver, var(--text-primary));
+}
+.win-appbar-button.pressed {
+	color: var(--AppBarButtonForegroundPressed, var(--text-secondary));
+}
+.win-appbar-button.pointer-over .appbar-button-inner-border {
+	background: var(--AppBarButtonBackgroundPointerOver, var(--subtle-secondary));
+}
+.win-appbar-button.pressed .appbar-button-inner-border {
+	background: var(--AppBarButtonBackgroundPressed, var(--subtle-tertiary));
+}
+.win-appbar-button:disabled {
+	color: var(--AppBarButtonForegroundDisabled, var(--text-disabled));
+	cursor: default;
+}
+.win-appbar-button:disabled .appbar-button-inner-border {
+	background: var(--AppBarButtonBackgroundDisabled, transparent);
+}
+.win-appbar-button.collapsed {
+	display: none;
+}
+.appbar-button-content-root {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	min-width: 0;
+	min-height: 64px;
+	align-content: start;
+	align-items: start;
+	grid-template-rows: auto auto;
+	grid-template-columns: 1fr auto auto;
+}
+.appbar-button-icon {
+	display: grid;
+	width: 16px;
+	height: 16px;
+	margin: 16px 0 10px;
+	place-items: center;
+	font-size: 16px;
+	line-height: 1;
+	grid-row: 1;
+	grid-column: 1 / 3;
+}
+.symbol-icon,
+.appbar-button-chevron {
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+}
+.symbol-icon {
+	font-size: 16px;
+	font-weight: 400;
+}
+.appbar-button-label {
+	display: block;
+	width: 64px;
+	min-width: 0;
+	max-width: 64px;
+	margin: 0 2px 8px;
+	overflow: visible;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+	text-overflow: clip;
+	white-space: normal;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	grid-row: 2;
+	grid-column: 1 / 4;
+}
+.win-appbar-button.label-right {
+	width: auto;
+	min-width: 68px;
+	min-height: 48px;
+}
+.win-appbar-button.label-right .appbar-button-content-root {
+	min-height: 48px;
+	grid-template-rows: 48px;
+	grid-template-columns: auto auto auto;
+}
+.win-appbar-button.label-right .appbar-button-icon {
+	margin: 16px 0 0 12px;
+	grid-row: 1;
+	grid-column: 1;
+}
+.win-appbar-button.label-right .appbar-button-label {
+	width: auto;
+	max-width: none;
+	margin: 16px 12px 10px 8px;
+	text-align: left;
+	white-space: nowrap;
+	grid-row: 1;
+	grid-column: 2;
+}
+.win-appbar-button.label-collapsed {
+	min-height: 48px;
+}
+.win-appbar-button.label-collapsed .appbar-button-label,
+.win-appbar-button.compact .appbar-button-label {
+	display: none;
+}
+.win-appbar-button.label-collapsed .appbar-button-content-root {
+	min-height: 48px;
+}
+.win-appbar-button.compact .appbar-button-icon {
+	margin-bottom: 2px;
+}
+.win-appbar-button.compact .appbar-button-inner-border {
+	bottom: 22px;
+}
+.appbar-button-chevron {
+	position: absolute;
+	top: 20px;
+	right: 12px;
+	color: var(--AppBarButtonSubItemChevronForeground, var(--text-secondary));
+	font-size: 8px;
+	line-height: 1;
+}
+.win-appbar-button:focus-visible,
+.commandbar-overflow-button:focus-visible {
+	outline: 2px solid var(--FocusStrokeColorOuterBrush, var(--text-primary));
+	outline-offset: -3px;
+}
+.win-appbar-button.appbar-toggle-button-checked {
+	color: var(--AppBarToggleButtonForegroundChecked, var(--accent-text));
+}
+.win-appbar-button.appbar-toggle-button-checked .appbar-button-inner-border {
+	background: var(--AppBarToggleButtonBackgroundChecked, var(--accent-base));
+	border: 1px solid var(--AppBarToggleButtonBorderBrushChecked, var(--accent-base));
+}
+.win-appbar-separator {
+	display: grid;
+	box-sizing: border-box;
+	width: 5px;
+	height: auto;
+	min-height: 0;
+	flex: 0 0 auto;
+	align-self: stretch;
+	padding: 8px 2px;
+	place-items: stretch;
+	color: var(--AppBarSeparatorForeground, var(--stroke-divider));
+}
+.win-appbar-separator .separator-line {
+	width: 1px;
+	height: auto;
+	min-height: 0;
+	background: currentColor;
+}
+
+.win-commandbar {
+	--CommandBarHeightTransitionDuration: 167ms;
+	position: relative;
+	z-index: 20;
+	width: 100%;
+	min-width: 0;
+	height: 48px;
+	min-height: 48px;
+	box-sizing: border-box;
+	color: var(--CommandBarForeground, var(--text-primary));
+	font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+	transition:
+		height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease),
+		min-height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease);
+}
+.win-commandbar.open {
+	--CommandBarHeightTransitionDuration: 250ms;
+}
+.commandbar-surface {
+	position: relative;
+	display: grid;
+	box-sizing: border-box;
+	width: 100%;
+	height: 48px;
+	min-height: 48px;
+	padding-left: 4px;
+	overflow: hidden;
+	grid-template-columns: minmax(0, 1fr) auto;
+	border-radius: var(--CommandBarCornerRadius, var(--ControlCornerRadius, 4px));
+	background: var(--CommandBarBackground, transparent);
+	transition:
+		height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease),
+		min-height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease);
+}
+.win-commandbar.open .commandbar-surface {
+	background: var(--CommandBarBackgroundOpen, var(--flyout-bg));
+	border: 1px solid var(--CommandBarBorderBrushOpen, var(--card-stroke));
+	-webkit-backdrop-filter: var(--flyout-backdrop, blur(30px) saturate(160%));
+	backdrop-filter: var(--flyout-backdrop, blur(30px) saturate(160%));
+}
+.commandbar-primary-content {
+	display: flex;
+	height: 48px;
+	min-width: 0;
+	min-height: 48px;
+	align-items: stretch;
+	justify-content: flex-end;
+	overflow: hidden;
+	transition:
+		height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease),
+		min-height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease);
+}
+.commandbar-command-slot {
+	display: inline-flex;
+	min-width: 0;
+	flex: 0 0 auto;
+}
+.win-commandbar.label-collapsed .commandbar-primary-content .appbar-button-label,
+.win-commandbar.label-bottom:not(.open) .commandbar-primary-content .appbar-button-label {
+	display: none;
+}
+.win-commandbar.label-bottom.open,
+.win-commandbar.label-bottom.open .commandbar-surface,
+.win-commandbar.label-bottom.open .commandbar-primary-content {
+	height: 64px;
+	min-height: 64px;
+}
+.win-commandbar.label-bottom.open .commandbar-primary-content .win-appbar-button {
+	height: 64px;
+	min-height: 64px;
+}
+.commandbar-overflow-button {
+	position: relative;
+	display: inline-grid;
+	box-sizing: border-box;
+	width: 48px;
+	min-width: 48px;
+	height: 48px;
+	min-height: 48px;
+	align-self: stretch;
+	place-items: center;
+	padding: 0;
+	color: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: default;
+	transition:
+		height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease),
+		min-height var(--CommandBarHeightTransitionDuration) var(--fast-out-slow-in, ease),
+		background-color var(--faster-duration, 83ms) linear;
+}
+.commandbar-overflow-button::before {
+	position: absolute;
+	inset: 6px 6px 6px 2px;
+	content: "";
+	background: transparent;
+	border-radius: var(--ControlCornerRadius, 4px);
+}
+.commandbar-overflow-button.is-placeholder {
+	visibility: hidden;
+	pointer-events: none;
+}
+.commandbar-overflow-button:hover::before {
+	background: var(--subtle-secondary);
+}
+.win-commandbar.label-bottom.open .commandbar-overflow-button {
+	height: 64px;
+	min-height: 64px;
+}
+.commandbar-ellipsis {
+	position: relative;
+	z-index: 1;
+	display: block;
+	width: 20px;
+	height: 20px;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 20px;
+	line-height: 20px;
+	text-align: center;
+}
+.win-commandbar .win-flyout-anchor {
+	display: none;
+}
+.win-commandbar > .win-flyout-anchor + .win-menu-flyout {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-commandbar,
+	.commandbar-surface,
+	.commandbar-primary-content,
+	.commandbar-overflow-button,
+	.win-appbar-button {
+		transition-duration: 0.01ms;
+	}
+}
+
+.win-flyout.win-commandbar-flyout {
+	box-sizing: border-box;
+	max-width: 440px;
+	min-width: 0;
+	padding: 0;
+	color: var(--CommandBarFlyoutForeground, var(--text-primary));
+	background: var(--CommandBarFlyoutBackground, var(--flyout-bg));
+	border-radius: var(--OverlayCornerRadius, 8px);
+	box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
+	-webkit-backdrop-filter: var(--flyout-backdrop, blur(30px));
+	backdrop-filter: var(--flyout-backdrop, blur(30px));
+	overflow: hidden;
+}
+.win-cbf-content-root {
+	display: flex;
+	min-width: 136px;
+	flex-direction: column;
+	background: transparent;
+	border-radius: inherit;
+}
+.win-cbf-primary-items-root {
+	display: grid;
+	min-height: 58px;
+	overflow: hidden;
+	grid-template-columns: minmax(0, 1fr) auto;
+	background: transparent;
+	border: 1px solid var(--CommandBarFlyoutBorderBrush, var(--flyout-border));
+	border-radius: inherit;
+}
+.win-cbf-content-root.is-expanded .win-cbf-primary-items-root {
+	border-radius: 8px 8px 0 0;
+}
+.win-cbf-primary-items-control {
+	display: flex;
+	min-width: 0;
+	height: 52px;
+	min-height: 52px;
+	align-items: stretch;
+	margin: 3px 0 3px 3px;
+}
+.win-cbf-commandbar {
+	height: 52px;
+	min-height: 52px;
+	background: transparent;
+	--CommandBarBackground: transparent;
+	--CommandBarBackgroundOpen: transparent;
+	--CommandBarBorderBrushOpen: transparent;
+}
+.win-cbf-commandbar .commandbar-surface,
+.win-cbf-commandbar .commandbar-primary-content,
+.win-cbf-commandbar.open {
+	height: 52px;
+	min-height: 52px;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+.win-cbf-commandbar .commandbar-primary-content {
+	justify-content: flex-start;
+	overflow: visible;
+}
+.win-cbf-commandbar .win-appbar-button {
+	width: auto;
+	min-width: 40px;
+	max-width: none;
+	height: 52px;
+	min-height: 52px;
+	flex-basis: auto;
+	align-self: stretch;
+}
+.win-cbf-commandbar .appbar-button-inner-border {
+	inset: 2px;
+}
+.win-cbf-commandbar .appbar-button-content-root {
+	width: auto;
+	min-width: 40px;
+	height: 52px;
+	min-height: 52px;
+	align-content: start;
+}
+.win-cbf-commandbar .appbar-button-icon {
+	margin: 9px 0 0;
+}
+.win-cbf-commandbar .appbar-button-label {
+	width: 60px;
+	max-width: 60px;
+	margin: 6px 0 2px;
+}
+.win-cbf-more-button,
+.win-cbf-overflow-button {
+	position: relative;
+	isolation: isolate;
+	box-sizing: border-box;
+	color: inherit;
+	font: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: var(--ControlCornerRadius, 4px);
+	cursor: pointer;
+	user-select: none;
+}
+.win-cbf-more-button {
+	display: grid;
+	width: 44px;
+	min-width: 44px;
+	height: 52px;
+	min-height: 52px;
+	margin: 3px 3px 3px 0;
+	place-items: center;
+	font-weight: 600;
+}
+.win-cbf-more-button::before,
+.win-cbf-overflow-button::before {
+	position: absolute;
+	inset: 2px;
+	z-index: 0;
+	content: "";
+	background: transparent;
+	border-radius: inherit;
+	transition: background-color 83ms linear;
+}
+.win-cbf-more-button::before {
+	inset: 2px 6px 2px 2px;
+}
+.win-cbf-more-button > *,
+.win-cbf-overflow-button > * {
+	position: relative;
+	z-index: 1;
+}
+.win-cbf-more-button:hover::before,
+.win-cbf-overflow-button:hover::before {
+	background: var(--subtle-secondary);
+}
+.win-cbf-more-button:active::before,
+.win-cbf-overflow-button:active::before {
+	background: var(--subtle-tertiary);
+}
+.win-cbf-more-button:focus-visible,
+.win-cbf-overflow-button:focus-visible {
+	outline: 2px solid var(--accent-base);
+	outline-offset: -2px;
+}
+.win-cbf-ellipsis-icon,
+.win-cbf-overflow-icon,
+.win-cbf-overflow-check,
+.win-cbf-overflow-chevron {
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+}
+.win-cbf-ellipsis-icon {
+	display: grid;
+	width: 16px;
+	height: 16px;
+	place-items: center;
+	font-size: 16px;
+	line-height: 16px;
+	transform: translateX(-2px);
+}
+.win-cbf-outer-overflow-content-root {
+	width: 100%;
+	background: transparent;
+}
+.win-cbf-overflow-content-root {
+	background: var(--CommandBarFlyoutButtonBackground, var(--flyout-bg));
+	border: solid var(--CommandBarFlyoutBorderBrush, var(--flyout-border));
+	border-width: 0 1px 1px;
+	border-radius: 0 0 8px 8px;
+}
+.win-cbf-secondary-items-control {
+	display: flex;
+	max-width: 440px;
+	max-height: 480px;
+	flex-direction: column;
+	padding: 3px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+.win-cbf-overflow-button {
+	display: grid;
+	width: 100%;
+	min-height: 33px;
+	padding: 0;
+	text-align: left;
+	align-items: center;
+	grid-template-columns: minmax(0, 1fr) auto auto;
+}
+.win-cbf-overflow-button.has-check,
+.win-cbf-overflow-button.has-menu-icon {
+	grid-template-columns: 39px minmax(0, 1fr) auto auto;
+}
+.win-cbf-overflow-check {
+	display: grid;
+	width: 39px;
+	margin: 4px 0;
+	place-items: center;
+	font-size: 12px;
+	line-height: 16px;
+	opacity: 0;
+}
+.win-cbf-overflow-button.is-checked .win-cbf-overflow-check {
+	opacity: 1;
+}
+.win-cbf-overflow-icon {
+	display: grid;
+	width: 16px;
+	height: 16px;
+	place-items: center;
+	font-size: 16px;
+	line-height: 16px;
+}
+.win-cbf-overflow-button.has-menu-icon:not(.has-check) .win-cbf-overflow-icon {
+	margin: 0 11px 0 12px;
+}
+.win-cbf-overflow-label {
+	min-width: 0;
+	margin: 0 12px;
+	padding: 6px 0 7px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.win-cbf-overflow-accelerator {
+	margin: 0 12px 0 8px;
+	color: var(--text-secondary);
+	font-size: 12px;
+}
+.win-cbf-overflow-chevron {
+	margin: 0 12px 0 4px;
+	font-size: 12px;
+}
+.win-cbf-overflow-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}

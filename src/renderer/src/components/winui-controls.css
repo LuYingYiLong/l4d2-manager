@@ -1,0 +1,1915 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 基础控件：按钮、输入框、选择器、进度和评分控件 */
+
+.win-btn,
+.win-checkbox,
+.win-radio-button,
+.win-toggle-switch,
+.win-slider,
+.win-text-box-host,
+.win-number-box,
+.win-time-picker,
+.win-color-picker {
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+}
+
+.win-btn {
+	position: relative;
+	box-sizing: border-box;
+	border-left: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushCurrent);
+	border-top: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushTopCurrent);
+	border-right: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushCurrent);
+	border-bottom: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushBottomCurrent);
+	border-radius: var(--ButtonCornerRadius);
+	min-height: 32px;
+	height: auto;
+	padding: var(--ButtonPadding, 5px 11px 6px);
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+	font-size: var(--ControlContentThemeFontSize, 14px);
+	font-weight: normal;
+	background: padding-box var(--ButtonBackgroundCurrent);
+	color: var(--ButtonForegroundCurrent);
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	user-select: none;
+	transition:
+		background var(--fast-duration, 0.167s) var(--fast-out-slow-in, ease),
+		color var(--fast-duration, 0.167s);
+	--ButtonPadding: 5px 11px 6px;
+	--ButtonBorderThemeThickness: 1px;
+	--ButtonCornerRadius: var(--ControlCornerRadius, 4px);
+	--ButtonBackground: var(--ctrl-fill-default);
+	--ButtonBackgroundPointerOver: var(--ctrl-fill-secondary);
+	--ButtonBackgroundPressed: var(--ctrl-fill-tertiary);
+	--ButtonBackgroundDisabled: var(--ctrl-fill-disabled);
+	--ButtonForeground: var(--text-primary);
+	--ButtonForegroundPointerOver: var(--text-primary);
+	--ButtonForegroundPressed: var(--text-secondary);
+	--ButtonForegroundDisabled: var(--text-disabled);
+	--ButtonBorderBrush: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--ButtonBorderBrushTop: var(--ButtonBorderBrushDefaultTop, var(--ButtonBorderBrush));
+	--ButtonBorderBrushBottom: var(--ButtonBorderBrushDefaultBottom, var(--ctrl-border-accent));
+	--ButtonBorderBrushPointerOver: var(--ButtonBorderBrush);
+	--ButtonBorderBrushPointerOverTop: var(--ButtonBorderBrushTop);
+	--ButtonBorderBrushPointerOverBottom: var(--ButtonBorderBrushBottom);
+	--ButtonBorderBrushPressed: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--ButtonBorderBrushPressedTop: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushPressedBottom: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushDisabled: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--ButtonBorderBrushDisabledTop: var(--ButtonBorderBrushDisabled);
+	--ButtonBorderBrushDisabledBottom: var(--ButtonBorderBrushDisabled);
+	--ButtonBackgroundCurrent: var(--ButtonBackground);
+	--ButtonForegroundCurrent: var(--ButtonForeground);
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrush);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushBottom);
+}
+
+.win-btn:hover {
+	--ButtonBackgroundCurrent: var(--ButtonBackgroundPointerOver);
+	--ButtonForegroundCurrent: var(--ButtonForegroundPointerOver);
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrushPointerOver);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushPointerOverTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushPointerOverBottom);
+}
+.win-btn:active {
+	--ButtonBackgroundCurrent: var(--ButtonBackgroundPressed);
+	--ButtonForegroundCurrent: var(--ButtonForegroundPressed);
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushPressedTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushPressedBottom);
+}
+.win-btn:disabled {
+	--ButtonBackgroundCurrent: var(--ButtonBackgroundDisabled);
+	--ButtonForegroundCurrent: var(--ButtonForegroundDisabled);
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrushDisabled);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushDisabledTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushDisabledBottom);
+	cursor: not-allowed;
+	pointer-events: none;
+}
+.win-btn.AccentButtonStyle {
+	--ButtonBackground: var(--accent-base);
+	--ButtonBackgroundPointerOver: var(--accent-hover);
+	--ButtonBackgroundPressed: var(--accent-pressed);
+	--ButtonBackgroundDisabled: var(--accent-fill-disabled);
+	--ButtonForeground: var(--accent-text);
+	--ButtonForegroundPointerOver: var(--accent-text);
+	--ButtonForegroundPressed: var(--accent-text-secondary);
+	--ButtonForegroundDisabled: var(--text-disabled);
+	--ButtonBorderBrush: var(--accent-border);
+	--ButtonBorderBrushTop: var(--accent-border);
+	--ButtonBorderBrushBottom: var(--accent-border-accent);
+	--ButtonBorderBrushPointerOver: var(--accent-border);
+	--ButtonBorderBrushPointerOverTop: var(--accent-border);
+	--ButtonBorderBrushPointerOverBottom: var(--accent-border-accent);
+	--ButtonBorderBrushPressed: transparent;
+	--ButtonBorderBrushPressedTop: transparent;
+	--ButtonBorderBrushPressedBottom: transparent;
+	--ButtonBorderBrushDisabled: transparent;
+	--ButtonBorderBrushDisabledTop: transparent;
+	--ButtonBorderBrushDisabledBottom: transparent;
+}
+.win-btn.SubtleButtonStyle {
+	--ButtonBackground: transparent;
+	--ButtonBackgroundPointerOver: var(--subtle-secondary);
+	--ButtonBackgroundPressed: var(--subtle-tertiary);
+	--ButtonBackgroundDisabled: transparent;
+	--ButtonForeground: var(--text-primary);
+	--ButtonForegroundPointerOver: var(--text-primary);
+	--ButtonForegroundPressed: var(--text-secondary);
+	--ButtonForegroundDisabled: var(--text-disabled);
+	--ButtonBorderBrush: transparent;
+	--ButtonBorderBrushTop: transparent;
+	--ButtonBorderBrushBottom: transparent;
+	--ButtonBorderBrushPointerOver: transparent;
+	--ButtonBorderBrushPointerOverTop: transparent;
+	--ButtonBorderBrushPointerOverBottom: transparent;
+	--ButtonBorderBrushPressed: transparent;
+	--ButtonBorderBrushPressedTop: transparent;
+	--ButtonBorderBrushPressedBottom: transparent;
+	--ButtonBorderBrushDisabled: transparent;
+	--ButtonBorderBrushDisabledTop: transparent;
+	--ButtonBorderBrushDisabledBottom: transparent;
+}
+
+.win-btn .win-text-block {
+	color: inherit;
+}
+
+.win-btn.content-horizontal-stretch > * {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.win-btn.content-vertical-stretch > * {
+	align-self: stretch;
+}
+
+.win-btn {
+	white-space: nowrap;
+}
+
+.win-text-block {
+	display: block;
+	min-width: 0;
+	color: var(--text-primary);
+	line-height: 20px;
+	user-select: none;
+}
+.win-text-block.CustomTextBlockStyle {
+	font-family: "Comic Sans MS", cursive;
+	font-style: italic;
+}
+.win-text-block::selection {
+	background: var(--TextBlockSelectionHighlightColor, Highlight);
+	color: HighlightText;
+}
+
+.win-image-host {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	overflow: visible;
+}
+.win-image {
+	display: block;
+	max-width: 100%;
+}
+.win-image-host.has-nine-grid {
+	display: block;
+}
+
+.win-stack-panel {
+	display: flex;
+	min-width: 0;
+}
+.win-grid {
+	display: grid;
+	min-width: 0;
+}
+.win-relative-panel {
+	position: relative;
+	min-width: 0;
+}
+.win-variable-wrap-grid {
+	display: grid;
+	min-width: 0;
+	gap: 8px;
+}
+.win-viewbox {
+	display: flex;
+	min-width: 0;
+	min-height: 0;
+}
+
+.win-checkbox,
+.win-radio-button,
+.win-toggle-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	color: var(--text-primary);
+	cursor: pointer;
+}
+.win-radio-button input,
+.win-toggle-switch input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.win-checkbox {
+	align-self: flex-start;
+	width: fit-content;
+	min-height: 32px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--CheckBoxForeground, var(--text-primary));
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+	font-size: 14px;
+	line-height: 20px;
+	text-align: left;
+	user-select: none;
+}
+.win-checkbox:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+.checkbox-box {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 20px;
+	height: 20px;
+	min-width: 20px;
+	border: 1px solid var(--CheckBoxCheckBackgroundStroke, var(--ctrl-strong-stroke));
+	border-radius: 4px;
+	background: var(--CheckBoxCheckBackgroundFill, var(--ctrl-fill-default));
+}
+.checkbox-glyph {
+	color: var(--CheckBoxCheckGlyphForeground, var(--accent-text));
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 1;
+}
+.indeterminate-glyph {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+.check-glyph {
+	font-weight: bold;
+	animation: glyph-close 0.2s ease-in-out forwards;
+}
+.check-glyph.checked {
+	animation: glyph-open 0.2s ease-in-out forwards;
+}
+.check-glyph.hidden {
+	visibility: hidden;
+}
+.checkbox-content {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+@keyframes glyph-open {
+	0% {
+		clip-path: polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%);
+	}
+	100% {
+		clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+	}
+}
+@keyframes glyph-close {
+	0% {
+		clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+	}
+	100% {
+		clip-path: polygon(100% 0%, 100% 0%, 100% 100%, 100% 100%);
+	}
+}
+.win-checkbox.is-unchecked {
+	--CheckBoxCheckBackgroundFill: var(--ctrl-fill-default);
+	--CheckBoxCheckBackgroundStroke: var(--ctrl-strong-stroke);
+}
+.win-checkbox.is-unchecked:hover {
+	--CheckBoxCheckBackgroundFill: var(--ctrl-fill-secondary);
+	--CheckBoxCheckBackgroundStroke: var(--ctrl-strong-stroke);
+}
+.win-checkbox.is-unchecked:active {
+	--CheckBoxCheckBackgroundFill: var(--ctrl-fill-tertiary);
+	--CheckBoxCheckBackgroundStroke: var(--ctrl-strong-stroke-disabled);
+}
+.win-checkbox.is-checked,
+.win-checkbox.is-indeterminate {
+	--CheckBoxCheckBackgroundFill: var(--accent-base);
+	--CheckBoxCheckBackgroundStroke: var(--accent-base);
+	--CheckBoxCheckGlyphForeground: var(--accent-text);
+}
+.win-checkbox.is-checked:hover,
+.win-checkbox.is-indeterminate:hover {
+	--CheckBoxCheckBackgroundFill: var(--accent-hover);
+	--CheckBoxCheckBackgroundStroke: var(--accent-hover);
+}
+.win-checkbox.is-checked:active,
+.win-checkbox.is-indeterminate:active {
+	--CheckBoxCheckBackgroundFill: var(--accent-pressed);
+	--CheckBoxCheckBackgroundStroke: var(--accent-pressed);
+	--CheckBoxCheckGlyphForeground: var(--accent-text-secondary);
+}
+.win-checkbox.is-disabled {
+	pointer-events: none;
+	cursor: default;
+	color: var(--text-disabled);
+}
+.win-checkbox.is-disabled .checkbox-box {
+	border-color: var(--ctrl-strong-stroke-disabled);
+	background: var(--ctrl-fill-disabled);
+}
+.win-checkbox.is-disabled.is-checked .checkbox-box,
+.win-checkbox.is-disabled.is-indeterminate .checkbox-box {
+	border-color: var(--accent-fill-disabled);
+	background: var(--accent-fill-disabled);
+}
+.win-checkbox.is-disabled .checkbox-glyph {
+	color: var(--text-disabled);
+}
+
+.win-radio-buttons {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.win-radio-buttons-header {
+	margin: 0 0 8px;
+}
+.win-radio-buttons-items {
+	display: grid;
+	column-gap: 7px;
+	row-gap: 8px;
+	align-items: start;
+}
+.win-radio-button {
+	display: inline-flex;
+	align-items: flex-start;
+	box-sizing: border-box;
+	min-width: 120px;
+	min-height: 32px;
+	gap: 8px;
+	padding: 0;
+	color: var(--text-primary);
+	cursor: pointer;
+	user-select: none;
+}
+.win-radio-input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+.win-radio-glyph {
+	display: inline-grid;
+	place-items: center;
+	box-sizing: border-box;
+	width: 20px;
+	height: 20px;
+	flex: 0 0 20px;
+	margin-top: 6px;
+	border: 1px solid var(--radio-border, var(--ctrl-strong-stroke));
+	border-radius: 50%;
+	background: transparent;
+}
+.win-radio-check {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: transparent;
+	transform: scale(0);
+	transition: transform var(--fast-duration) var(--fast-out-slow-in);
+}
+.win-radio-button:hover .win-radio-glyph {
+	border-color: var(--text-primary);
+	background: var(--subtle-secondary);
+}
+.win-radio-button:active .win-radio-glyph {
+	border-color: var(--text-secondary);
+	background: var(--subtle-tertiary);
+}
+.win-radio-button.is-checked .win-radio-glyph {
+	border-color: var(--accent-base);
+	background: var(--accent-base);
+}
+.win-radio-button.is-checked:hover .win-radio-glyph {
+	border-color: var(--accent-hover);
+	background: var(--accent-hover);
+}
+.win-radio-button.is-checked:active .win-radio-glyph {
+	border-color: var(--accent-pressed);
+	background: var(--accent-pressed);
+}
+.win-radio-button.is-checked .win-radio-check {
+	background: var(--accent-text);
+	transform: scale(1);
+}
+.win-radio-button.is-checked:hover .win-radio-check {
+	transform: scale(1.2);
+}
+.win-radio-button.is-checked:active .win-radio-check {
+	transform: scale(0.8);
+}
+.win-radio-content {
+	padding-top: 6px;
+	line-height: 20px;
+}
+.win-radio-button.is-disabled {
+	cursor: default;
+	color: var(--text-disabled);
+}
+.win-radio-button.is-disabled .win-radio-glyph {
+	border-color: var(--ctrl-strong-stroke-disabled);
+	background: transparent;
+}
+.win-radio-button.is-disabled.is-checked .win-radio-glyph {
+	background: var(--ctrl-strong-stroke-disabled);
+}
+
+.win-switch-root {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0;
+	min-height: 0;
+	min-width: 154px;
+	cursor: default;
+}
+.win-switch-header {
+	margin: 0 0 4px;
+}
+.win-switch-wrap {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 40px;
+	cursor: pointer;
+	touch-action: none;
+	user-select: none;
+}
+.win-switch {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	width: 40px;
+	height: 20px;
+	flex-shrink: 0;
+	border-radius: 10px;
+	cursor: pointer;
+	touch-action: none;
+	--tx: 0px;
+}
+.win-switch:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: 3px;
+}
+.win-switch .track {
+	position: absolute;
+	inset: 0;
+	border: 1px solid var(--toggle-border);
+	border-radius: 10px;
+	background-color: var(--control-alt-fill-color-secondary, var(--subtle-secondary));
+	transition: all var(--fast-duration) var(--fast-out-slow-in);
+}
+.win-switch:hover .track {
+	border-color: var(--text-primary);
+	background-color: var(--control-alt-fill-color-tertiary, var(--subtle-tertiary));
+}
+.win-switch.is-pressed:not(.is-on) .track,
+.win-switch.dragging:not(.is-on) .track {
+	border-color: var(--toggle-border);
+	background-color: var(--control-alt-fill-color-quarternary, var(--subtle-pressed));
+}
+.win-switch.is-on .track {
+	border-color: transparent;
+	background-color: var(--accent-base);
+}
+.win-switch.is-on:hover .track {
+	background-color: var(--accent-hover);
+}
+.win-switch.is-on.is-pressed .track,
+.win-switch.is-on.dragging .track {
+	background-color: var(--accent-pressed);
+}
+.win-switch .knob {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 20px;
+	height: 20px;
+	transform: translateX(var(--tx));
+	transition: transform var(--fast-duration) var(--fast-out-slow-in);
+}
+.win-switch.is-on .knob {
+	--tx: 20px;
+}
+.win-switch .thumb {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 12px;
+	height: 12px;
+	border-radius: 6px;
+	background-color: var(--toggle-thumb);
+	transform: translate(-50%, -50%) translateX(-0.5px);
+	transition:
+		width var(--fast-duration) var(--fast-out-slow-in),
+		height var(--fast-duration) var(--fast-out-slow-in),
+		background-color var(--fast-duration);
+}
+.win-switch.is-on .thumb {
+	background-color: var(--toggle-on-thumb);
+}
+.win-switch:hover .thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-thumb-hover);
+}
+.win-switch:hover.is-on .thumb {
+	background-color: var(--toggle-on-thumb);
+}
+.win-switch.is-pressed .knob,
+.win-switch.dragging .knob {
+	transition: none;
+}
+.win-switch.is-pressed:not(.is-on) .thumb,
+.win-switch.dragging:not(.is-on) .thumb {
+	width: 17px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-thumb-hover);
+	transform: translate(-50%, -50%) translateX(1.5px);
+	transition: none;
+}
+.win-switch.is-pressed.is-on .thumb,
+.win-switch.dragging.is-on .thumb {
+	width: 17px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-on-thumb);
+	transform: translate(-50%, -50%) translateX(-1.5px);
+	transition: none;
+}
+.win-switch-wrap:not(.is-disabled):hover .win-switch:not(.is-on) .track {
+	border-color: var(--text-primary);
+}
+.win-switch-wrap:not(.is-disabled):hover .win-switch .thumb {
+	width: 14px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-thumb-hover);
+}
+.win-switch-wrap:not(.is-disabled):hover .win-switch.is-on .track {
+	background-color: var(--accent-hover);
+}
+.win-switch-wrap:not(.is-disabled):hover .win-switch.is-on .thumb {
+	background-color: var(--toggle-on-thumb);
+}
+.win-switch-wrap:not(.is-disabled):active .win-switch:not(.is-on) .thumb {
+	width: 17px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-thumb-hover);
+	transform: translate(-50%, -50%) translateX(1.5px);
+	transition: none;
+}
+.win-switch-wrap:not(.is-disabled):active .win-switch.is-on .thumb {
+	width: 17px;
+	height: 14px;
+	border-radius: 7px;
+	background-color: var(--toggle-on-thumb);
+	transform: translate(-50%, -50%) translateX(-1.5px);
+	transition: none;
+}
+.win-switch-wrap:not(.is-disabled):active .win-switch.is-on .track {
+	background-color: var(--accent-pressed);
+}
+.win-switch-label {
+	min-width: 20px;
+	color: var(--text-primary);
+	cursor: pointer;
+	user-select: none;
+}
+.win-switch-wrap.is-disabled {
+	cursor: default;
+}
+.win-switch-wrap.is-disabled .win-switch-label {
+	color: var(--text-disabled);
+	cursor: default;
+}
+.win-switch.is-disabled {
+	cursor: default;
+}
+.win-switch.is-disabled .track {
+	border-color: var(--ctrl-strong-stroke-disabled);
+	background-color: transparent;
+}
+.win-switch.is-disabled .thumb {
+	background-color: var(--ctrl-strong-stroke-disabled);
+}
+.win-switch.is-disabled.is-on .track {
+	border-color: transparent;
+	background-color: var(--accent-fill-disabled);
+}
+.win-switch.is-disabled.is-on .thumb {
+	background-color: var(--text-disabled);
+}
+.win-switch.is-disabled:hover .track {
+	border-color: var(--ctrl-strong-stroke-disabled);
+}
+.win-switch.is-disabled:hover .thumb {
+	width: 12px;
+	height: 12px;
+	border-radius: 6px;
+	background-color: var(--ctrl-strong-stroke-disabled);
+}
+.win-switch.is-disabled:hover.is-on .track {
+	background-color: var(--accent-fill-disabled);
+}
+.win-switch.is-disabled:hover.is-on .thumb {
+	background-color: var(--text-disabled);
+}
+.win-toggle-button.checked {
+	outline: 2px solid var(--accent-base);
+	outline-offset: -2px;
+}
+.win-toggle-button.is-indeterminate {
+	outline: 2px solid var(--accent-base);
+	outline-offset: -2px;
+}
+.win-toggle-button.is-disabled,
+.win-toggle-split-button.is-disabled {
+	cursor: default;
+}
+.win-toggle-split-button.is-checked .win-split-main-button {
+	color: var(--accent-text);
+	background: var(--accent-base);
+	border-color: var(--accent-base);
+}
+.win-toggle-split-button.is-checked .win-split-main-button:hover {
+	background: var(--accent-hover);
+	border-color: var(--accent-hover);
+}
+.win-toggle-split-button.is-checked .win-split-main-button:active {
+	background: var(--accent-pressed);
+	border-color: var(--accent-pressed);
+}
+
+.win-slider-root {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+.win-slider-header {
+	margin: 0 0 8px;
+}
+.win-slider {
+	position: relative;
+	display: flex;
+	min-width: 32px;
+	min-height: 32px;
+	flex-shrink: 0;
+	align-items: center;
+	touch-action: none;
+}
+.win-slider.vertical {
+	min-width: 24px;
+	min-height: 32px;
+	align-items: stretch;
+	justify-content: center;
+}
+.win-slider-input {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	appearance: none;
+	cursor: pointer;
+	background: transparent;
+}
+.win-slider-input:disabled {
+	cursor: default;
+}
+.win-slider-input::-webkit-slider-runnable-track {
+	height: 4px;
+	background: transparent;
+	border-radius: 2px;
+}
+.win-slider-input::-moz-range-track {
+	height: 4px;
+	background: transparent;
+	border-radius: 2px;
+}
+.win-slider-input:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-slider-input {
+	background: transparent;
+}
+.win-slider.vertical .win-slider-input {
+	width: 100%;
+	height: 100%;
+	background: transparent;
+	writing-mode: vertical-lr;
+	direction: rtl;
+}
+.win-slider-input::-webkit-slider-thumb {
+	width: 22px;
+	height: 22px;
+	margin-top: -9px;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+.win-slider-input::-moz-range-thumb {
+	width: 22px;
+	height: 22px;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+}
+.win-slider-track {
+	position: absolute;
+	top: 50%;
+	right: 0;
+	left: 0;
+	height: 4px;
+	content: "";
+	background: var(--SliderTrackFill, var(--ctrl-strong-fill));
+	border-radius: 2px;
+	overflow: hidden;
+	transform: translateY(-50%);
+}
+.win-slider-fill {
+	height: 100%;
+	background: var(--SliderFill, var(--accent-base));
+	border-radius: 2px;
+}
+.win-slider.vertical .win-slider-track {
+	top: 0;
+	right: auto;
+	bottom: 0;
+	left: 50%;
+	width: 4px;
+	height: auto;
+	display: flex;
+	align-items: flex-end;
+	transform: translateX(-50%);
+}
+.win-slider.vertical .win-slider-fill {
+	width: 100%;
+	height: 0;
+}
+.win-slider-thumb {
+	position: absolute;
+	top: 50%;
+	z-index: 1;
+	width: 22px;
+	height: 22px;
+	display: grid;
+	place-items: center;
+	background: var(--SliderOuterThumbBackground, var(--ctrl-solid-fill));
+	border: 1px solid var(--ctrl-border);
+	border-radius: 50%;
+	box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+	transform: translate(-50%, -50%);
+}
+.win-slider-thumb::after {
+	width: 12px;
+	height: 12px;
+	content: "";
+	background: var(--accent-base);
+	border-radius: 50%;
+	transform: scale(0.86);
+	transition: transform var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-slider.vertical .win-slider-thumb {
+	top: auto;
+	left: 50%;
+	transform: translate(-50%, 50%);
+}
+.win-slider:has(.win-slider-input:hover) .win-slider-thumb::after {
+	background: var(--accent-hover);
+	transform: scale(1.167);
+}
+.win-slider:has(.win-slider-input:active) .win-slider-thumb::after {
+	background: var(--accent-pressed);
+	transform: scale(0.71);
+}
+.win-slider-ticks {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+.win-slider-tick {
+	position: absolute;
+	width: 1px;
+	height: 4px;
+	background: var(--SliderTickBarFill, var(--ctrl-strong-fill));
+	transform: translateX(-50%);
+}
+.win-slider-tick.top-left {
+	top: calc(50% - 10px);
+}
+.win-slider-tick.bottom-right {
+	top: calc(50% + 6px);
+}
+.win-slider-ticks.placement-inline .win-slider-tick {
+	top: 50%;
+	height: 4px;
+	background: var(--SliderInlineTickBarFill, var(--accent-base));
+	transform: translate(-50%, -50%);
+}
+.win-slider.vertical .win-slider-tick {
+	width: 4px;
+	height: 1px;
+	transform: translateY(-50%);
+}
+.win-slider.vertical .win-slider-tick.top-left {
+	left: calc(50% - 10px);
+}
+.win-slider.vertical .win-slider-tick.bottom-right {
+	left: calc(50% + 6px);
+}
+.win-slider.vertical .win-slider-ticks.placement-inline .win-slider-tick {
+	top: auto;
+	left: 50%;
+	width: 4px;
+	height: 1px;
+	transform: translate(-50%, -50%);
+}
+.win-slider-tooltip {
+	position: absolute;
+	z-index: 3;
+	min-width: 24px;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	color: var(--text-primary);
+	font-size: 12px;
+	line-height: 16px;
+	text-align: center;
+	white-space: nowrap;
+	background: var(--flyout-bg, var(--layer-default));
+	border: 1px solid var(--flyout-border, var(--ctrl-border));
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgb(0 0 0 / 16%);
+	transform: translateX(-50%);
+	pointer-events: none;
+}
+.win-slider-tooltip.vertical {
+	transform: translate(-100%, 50%);
+}
+.win-slider-root.is-disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+.win-text-box-host input,
+.win-text-box-host textarea,
+.win-time-picker input,
+.win-color-picker input {
+	min-height: 32px;
+	box-sizing: border-box;
+	color: var(--text-primary);
+	background: var(--ctrl-fill-default);
+	border: 1px solid var(--ctrl-border);
+	border-radius: 4px;
+	padding: 5px 11px;
+}
+.win-color-picker {
+	box-sizing: border-box;
+	display: inline-flex;
+	width: auto;
+	min-width: 312px;
+	max-width: 392px;
+	flex-direction: column;
+	gap: 0;
+	padding: 0 4px;
+	color: var(--text-primary);
+	user-select: none;
+}
+.win-color-picker .picker-header {
+	margin: 0 0 8px;
+	font-size: 14px;
+	line-height: 20px;
+}
+.cp-spectrum-grid {
+	display: grid;
+	width: var(--cp-total-width, 256px);
+	grid-template-columns: var(--cp-spectrum-size, 256px) auto;
+	column-gap: var(--cp-preview-gap, 12px);
+}
+.cp-no-preview .cp-spectrum-grid {
+	display: block;
+}
+.cp-spectrum-area {
+	position: relative;
+	box-sizing: border-box;
+	display: block;
+	width: var(--cp-spectrum-size, 256px);
+	height: var(--cp-spectrum-size, 256px);
+	overflow: hidden;
+	background-image:
+		linear-gradient(to bottom, rgb(255 255 255 / 100%), rgb(255 255 255 / 0%)),
+		linear-gradient(
+			to right,
+			#f00 0%,
+			#ff0 16.67%,
+			#0f0 33.33%,
+			#0ff 50%,
+			#00f 66.67%,
+			#f0f 83.33%,
+			#f00 100%
+		);
+	border-radius: 4px;
+	cursor: crosshair;
+	touch-action: none;
+}
+.cp-spectrum-area:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--accent-base));
+	outline-offset: 2px;
+}
+.cp-spectrum-area.cp-ring {
+	border-radius: 50%;
+}
+.cp-spectrum-thumb {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	box-sizing: border-box;
+	border-radius: 50%;
+	border: 2px solid var(--spectrum-thumb-color, white);
+	box-shadow: 0 0 2px rgb(0 0 0 / 60%);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+.cp-spectrum-thumb::after {
+	display: block;
+	width: 10px;
+	height: 10px;
+	margin: 1px;
+	border-radius: 50%;
+	background: var(--thumb-inner, rgb(255 255 255 / 90%));
+	content: "";
+}
+.cp-preview-bar {
+	display: flex;
+	width: var(--cp-preview-width, 44px);
+	height: var(--cp-spectrum-size, 256px);
+	flex-direction: column;
+	gap: 0;
+	align-self: stretch;
+}
+.cp-preview-current,
+.cp-preview-previous {
+	min-height: 44px;
+	flex: 1;
+	border: 1px solid var(--card-stroke);
+	border-radius: 4px;
+}
+.cp-sliders {
+	display: flex;
+	flex-direction: column;
+	width: var(--cp-total-width, 256px);
+	gap: 6px;
+	margin: 0 0 16px;
+}
+.cp-slider-row {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	height: 20px;
+	cursor: pointer;
+	touch-action: none;
+}
+.cp-value-track {
+	position: relative;
+	width: 100%;
+	height: 12px;
+	border-radius: 8px;
+	cursor: pointer;
+	touch-action: none;
+}
+.cp-alpha-track {
+	position: relative;
+	width: 100%;
+	height: 12px;
+	border-radius: 8px;
+	background-color: #fff;
+	background-image:
+		linear-gradient(45deg, #d7d7d7 25%, transparent 25%),
+		linear-gradient(-45deg, #d7d7d7 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #d7d7d7 75%),
+		linear-gradient(-45deg, transparent 75%, #d7d7d7 75%),
+		linear-gradient(to right, transparent, var(--cp-alpha-color, #0067c0));
+	background-position:
+		0 0,
+		0 4px,
+		4px -4px,
+		-4px 0,
+		0 0;
+	background-size:
+		8px 8px,
+		8px 8px,
+		8px 8px,
+		8px 8px,
+		100% 100%;
+	background-repeat: repeat, repeat, repeat, repeat, no-repeat;
+	cursor: pointer;
+	touch-action: none;
+}
+.cp-slider-thumb {
+	position: absolute;
+	top: 50%;
+	width: 16px;
+	height: 16px;
+	box-sizing: border-box;
+	border-radius: 50%;
+	background: var(--ctrl-solid-fill);
+	border: 1px solid var(--ctrl-elevation-bottom);
+	border-top-color: var(--ctrl-elevation-top);
+	box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+}
+.cp-slider-thumb::after {
+	display: block;
+	width: 10px;
+	height: 10px;
+	margin: 2px;
+	border-radius: 50%;
+	background: var(--text-primary);
+	content: "";
+	transition: transform var(--fast-duration) var(--fast-out-slow-in);
+}
+.cp-more-row {
+	display: flex;
+	width: var(--cp-total-width, 256px);
+	justify-content: flex-end;
+	margin: 8px 0 12px;
+}
+.cp-more-button {
+	min-width: 120px;
+	height: 32px;
+	padding: 0;
+	justify-content: flex-end;
+	gap: 0;
+	background: transparent;
+	border-color: transparent;
+}
+.cp-more-button::after {
+	display: none;
+}
+.cp-more-button:hover {
+	background: transparent;
+	color: var(--text-secondary);
+}
+.cp-more-button:active {
+	background: transparent;
+	color: var(--text-tertiary);
+}
+.cp-more-label {
+	margin: 0 8px 0 0;
+	line-height: 20px;
+}
+.cp-more-button .icon {
+	font-size: 12px;
+}
+.cp-details-grid {
+	display: grid;
+	width: var(--cp-total-width, 256px);
+	grid-template-columns: 120px 8px minmax(0, 1fr);
+	column-gap: 0;
+	row-gap: 12px;
+	align-items: center;
+}
+.cp-details-grid > .win-combo-box,
+.cp-details-grid > .win-number-box {
+	grid-column: 1;
+}
+.cp-details-grid > .win-text-block {
+	grid-column: 3;
+	align-self: center;
+}
+.cp-hex-box {
+	grid-column: 3;
+	justify-self: end;
+	width: 132px;
+}
+
+.win-textbox {
+	display: block;
+	min-width: 0;
+	color: var(--textbox-foreground, var(--text-primary));
+	--textbox-background: var(--TextControlBackground, var(--ctrl-fill-default));
+	--textbox-background-pointer-over: var(
+		--TextControlBackgroundPointerOver,
+		var(--ctrl-fill-secondary)
+	);
+	--textbox-background-pressed: var(--ctrl-fill-tertiary);
+	--textbox-background-focused: var(
+		--TextControlBackgroundFocused,
+		var(--ctrl-fill-input-active)
+	);
+	--textbox-background-disabled: var(--TextControlBackgroundDisabled, var(--ctrl-fill-disabled));
+	--textbox-border-top: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border-rest));
+	--textbox-border-bottom: var(--ControlStrongStrokeColorDefaultBrush, var(--ctrl-strong-stroke));
+	--textbox-border-focused: var(--SystemAccentColorDark1, var(--accent-base));
+	--textbox-foreground: var(--text-primary);
+	--textbox-foreground-pointer-over: var(--text-primary);
+	--textbox-foreground-focused: var(--text-primary);
+	--textbox-foreground-disabled: var(--text-disabled);
+	--textbox-placeholder-foreground: var(--text-secondary);
+	--textbox-placeholder-foreground-pointer-over: var(--text-primary);
+	--textbox-placeholder-foreground-focused: var(--text-primary);
+	--textbox-placeholder-foreground-disabled: var(--text-disabled);
+}
+.win-textbox-header {
+	margin-bottom: 8px;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 20px;
+}
+.win-textbox-border {
+	position: relative;
+	min-height: 32px;
+	overflow: visible;
+	background: var(--textbox-background);
+	border: 1px solid var(--textbox-border-top);
+	border-bottom-color: var(--textbox-border-bottom);
+	border-radius: 4px;
+	box-shadow: inset 0 0 0 transparent;
+}
+.win-textbox-focus-border {
+	position: absolute;
+	inset: -1px;
+	z-index: 4;
+	display: none;
+	overflow: hidden;
+	pointer-events: none;
+	border-radius: inherit;
+}
+.win-textbox-focus-border::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 2px;
+	background: var(--textbox-border-focused);
+}
+.win-textbox.is-hovered:not(.is-disabled) .win-textbox-border {
+	background: var(--textbox-background-pointer-over);
+}
+.win-textbox:active:not(.is-disabled):not(.is-focused) .win-textbox-border {
+	background: var(--textbox-background-pressed);
+}
+.win-textbox.is-focused:not(.is-disabled) .win-textbox-border {
+	background: var(--textbox-background-focused);
+}
+.win-textbox.is-focused:not(.is-disabled) .win-textbox-focus-border {
+	display: block;
+}
+.win-textbox-content {
+	display: flex;
+	align-items: stretch;
+	min-width: 0;
+	min-height: 30px;
+}
+.win-textbox-field {
+	position: relative;
+	z-index: 1;
+	flex: 1;
+	min-width: 0;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 5px 6px 6px 10px;
+	color: var(--textbox-foreground);
+	font: inherit;
+	line-height: 20px;
+	background: transparent;
+	border: 0;
+	outline: none;
+}
+.win-textbox-textarea {
+	min-height: 76px;
+	resize: none;
+	overflow: hidden;
+}
+.win-textbox-delete-button {
+	appearance: none;
+	-webkit-appearance: none;
+	align-self: stretch;
+	position: relative;
+	width: 40px;
+	min-width: 40px;
+	height: auto;
+	min-height: 0;
+	padding: 0;
+	color: var(--text-secondary);
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+.win-textbox-delete-button-layout {
+	position: absolute;
+	inset: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+.win-textbox-delete-button:hover .win-textbox-delete-button-layout {
+	background: var(--subtle-secondary);
+}
+.win-textbox-delete-button:active .win-textbox-delete-button-layout {
+	background: var(--subtle-tertiary);
+}
+.win-textbox-delete-glyph {
+	display: block;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 12px;
+}
+.win-textbox-field::placeholder {
+	color: var(--textbox-placeholder-foreground);
+	opacity: 1;
+}
+.win-textbox.is-hovered:not(.is-disabled) .win-textbox-field {
+	color: var(--textbox-foreground-pointer-over);
+}
+.win-textbox.is-focused:not(.is-disabled) .win-textbox-field {
+	color: var(--textbox-foreground-focused);
+}
+.win-textbox-field::selection {
+	background: var(--textbox-selection-background, Highlight);
+	color: HighlightText;
+}
+.win-textbox-description {
+	margin-top: 6px;
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 16px;
+}
+.win-textbox.is-readonly .win-textbox-border {
+	background: var(--ctrl-fill-tertiary);
+}
+.win-textbox.is-disabled {
+	pointer-events: none;
+}
+.win-textbox.is-disabled .win-textbox-border {
+	background: var(--textbox-background-disabled);
+	border-bottom-color: var(--ctrl-strong-stroke-disabled, var(--ctrl-strong-stroke));
+}
+.win-textbox.is-disabled .win-textbox-header,
+.win-textbox.is-disabled .win-textbox-description,
+.win-textbox.is-disabled .win-textbox-field {
+	color: var(--textbox-foreground-disabled);
+}
+
+.win-text-box-host {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.win-text-box-host textarea {
+	min-height: 80px;
+	resize: vertical;
+}
+.win-number-box,
+.win-time-picker,
+.win-color-picker {
+	position: relative;
+	display: inline-flex;
+	flex-direction: column;
+	gap: 4px;
+}
+.win-number-box {
+	min-width: 64px;
+}
+.win-number-shell,
+.win-number-textbox {
+	width: 100%;
+}
+.win-number-spin {
+	display: flex;
+	align-self: stretch;
+	color: var(--text-secondary);
+}
+.win-number-spin.inline {
+	flex-direction: row;
+}
+.win-number-spin-button {
+	display: grid;
+	place-items: center;
+	min-width: 0;
+	padding: 0;
+	font: inherit;
+	line-height: 1;
+	color: inherit;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+.win-number-spin-button:first-child {
+	width: 40px;
+	min-width: 40px;
+	flex: 0 0 40px;
+}
+.win-number-spin-button:last-child {
+	width: 36px;
+	min-width: 36px;
+	flex: 0 0 36px;
+}
+.win-number-spin-button span,
+.win-number-compact-indicator span,
+.win-number-popup-button span {
+	display: block;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 12px;
+	line-height: 1;
+}
+.win-number-spin-button:hover,
+.win-number-compact-indicator:hover {
+	color: var(--text-primary);
+	background: var(--subtle-secondary);
+}
+.win-number-spin-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+	background: transparent;
+}
+.win-number-compact-indicator {
+	align-self: stretch;
+	display: flex;
+	width: 40px;
+	min-width: 40px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+	pointer-events: none;
+}
+.win-number-compact-popup {
+	position: fixed;
+	top: 0;
+	right: auto;
+	z-index: 1000;
+	display: flex;
+	width: 48px;
+	box-sizing: border-box;
+	padding: 6px;
+	flex-direction: column;
+	gap: 4px;
+	background: var(--flyout-bg);
+	border: 1px solid var(--flyout-border);
+	border-radius: 8px;
+	box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
+	backdrop-filter: var(--flyout-backdrop);
+}
+.win-number-popup-button {
+	display: grid;
+	width: 36px;
+	height: 36px;
+	place-items: center;
+	padding: 0;
+	color: var(--text-secondary);
+	font: inherit;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.win-number-popup-button span {
+	font-size: 16px;
+}
+.win-number-popup-button:hover {
+	color: var(--text-primary);
+	background: var(--subtle-secondary);
+}
+.win-number-popup-button:disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}
+.win-number-box.is-disabled {
+	opacity: 0.6;
+}
+
+.win-progress-bar {
+	position: relative;
+	display: inline-block;
+	box-sizing: border-box;
+	min-width: 1px;
+	vertical-align: middle;
+	color: var(--ProgressBarForeground, var(--accent-base));
+}
+.win-progress-bar .LayoutRoot,
+.win-progress-bar .ProgressBarRoot,
+.win-progress-bar .ProgressBarClip {
+	position: relative;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: inherit;
+}
+.win-progress-bar .ProgressBarRoot,
+.win-progress-bar .ProgressBarClip {
+	overflow: visible;
+	border-radius: inherit;
+}
+.win-progress-bar .ProgressBarClip {
+	position: relative;
+}
+.win-progress-bar.state-Indeterminate .ProgressBarClip,
+.win-progress-bar.state-IndeterminatePaused .ProgressBarClip,
+.win-progress-bar.state-IndeterminateError .ProgressBarClip {
+	overflow: hidden;
+}
+.win-progress-bar .ProgressBarTrack,
+.win-progress-bar .DeterminateProgressBarIndicator,
+.win-progress-bar .IndeterminateProgressBarIndicator,
+.win-progress-bar .IndeterminateProgressBarIndicator2 {
+	position: absolute;
+	left: 0;
+	box-sizing: border-box;
+	transform-origin: left center;
+	pointer-events: none;
+}
+.win-progress-bar .ProgressBarTrack {
+	top: 50%;
+	width: 100%;
+	height: 1px;
+	min-height: 1px;
+	background: var(--ProgressBarBackground, var(--ctrl-strong-stroke));
+	border-radius: 0.5px;
+	transform: translateY(-50%);
+	transition:
+		opacity 167ms linear,
+		transform 750ms cubic-bezier(0, 0, 0, 1);
+}
+.win-progress-bar .DeterminateProgressBarIndicator,
+.win-progress-bar .IndeterminateProgressBarIndicator,
+.win-progress-bar .IndeterminateProgressBarIndicator2 {
+	top: 0;
+	height: 3px;
+	min-height: 1px;
+	border-radius: 1.5px;
+	transform: none;
+}
+.win-progress-bar .DeterminateProgressBarIndicator {
+	background: var(--ProgressBarForeground, var(--accent-base));
+	transition:
+		width 167ms cubic-bezier(0.4, 0, 0.6, 1),
+		background-color 167ms linear;
+}
+.win-progress-bar .IndeterminateProgressBarIndicator,
+.win-progress-bar .IndeterminateProgressBarIndicator2 {
+	width: 40%;
+	opacity: 0;
+	background: var(--ProgressBarForeground, var(--accent-base));
+}
+.win-progress-bar .IndeterminateProgressBarIndicator2 {
+	width: 60%;
+}
+.win-progress-bar.state-Indeterminate .ProgressBarTrack,
+.win-progress-bar.state-IndeterminatePaused .ProgressBarTrack,
+.win-progress-bar.state-IndeterminateError .ProgressBarTrack {
+	opacity: 0;
+}
+.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator,
+.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator2 {
+	opacity: 1;
+}
+.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator {
+	animation: win-progress-bar-indeterminate 2s infinite;
+}
+.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator2 {
+	animation: win-progress-bar-indeterminate-2 2s infinite;
+}
+.win-progress-bar.state-IndeterminatePaused .DeterminateProgressBarIndicator,
+.win-progress-bar.state-IndeterminateError .DeterminateProgressBarIndicator,
+.win-progress-bar.state-IndeterminatePaused .IndeterminateProgressBarIndicator,
+.win-progress-bar.state-IndeterminateError .IndeterminateProgressBarIndicator {
+	opacity: 0;
+}
+.win-progress-bar.state-IndeterminatePaused .IndeterminateProgressBarIndicator2,
+.win-progress-bar.state-IndeterminateError .IndeterminateProgressBarIndicator2 {
+	width: 100%;
+	opacity: 1;
+	animation: none;
+	transform: translateX(0);
+	transition:
+		transform 750ms cubic-bezier(0, 0, 0, 1),
+		background-color 167ms linear;
+}
+.win-progress-bar.state-IndeterminatePaused .IndeterminateProgressBarIndicator2 {
+	background: var(--ProgressBarPausedForeground, var(--system-yellow, #f9c74f));
+}
+.win-progress-bar.state-IndeterminateError .IndeterminateProgressBarIndicator2 {
+	background: var(--ProgressBarErrorForeground, var(--system-red, #d13438));
+}
+.win-progress-bar.state-Paused .DeterminateProgressBarIndicator {
+	background: var(--ProgressBarPausedForeground, var(--system-yellow, #f9c74f));
+}
+.win-progress-bar.state-Error .DeterminateProgressBarIndicator {
+	background: var(--ProgressBarErrorForeground, var(--system-red, #d13438));
+}
+.win-progress-bar.is-disabled {
+	opacity: 0.6;
+}
+.win-progress-bar.is-collapsed {
+	display: none;
+}
+
+@keyframes win-progress-bar-indeterminate {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(300%);
+	}
+}
+@keyframes win-progress-bar-indeterminate-2 {
+	0% {
+		transform: translateX(-150%);
+	}
+	37.5% {
+		transform: translateX(-150%);
+	}
+	100% {
+		transform: translateX(166%);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator,
+	.win-progress-bar.state-Indeterminate .IndeterminateProgressBarIndicator2 {
+		animation-duration: 0.001ms;
+		animation-iteration-count: 1;
+		transition-duration: 0.001ms;
+	}
+	.win-progress-bar .DeterminateProgressBarIndicator,
+	.win-progress-bar .ProgressBarTrack,
+	.win-progress-bar .IndeterminateProgressBarIndicator2 {
+		transition-duration: 0.001ms;
+	}
+}
+.win-progress-ring {
+	--ProgressRingStrokeThickness: 8;
+	position: relative;
+	display: inline-flex;
+	box-sizing: border-box;
+	flex: 0 0 auto;
+	vertical-align: middle;
+	color: var(--ProgressRingForeground);
+	opacity: 1;
+	transition: opacity 167ms linear;
+}
+.win-progress-ring.is-inactive,
+.win-progress-ring.is-collapsed {
+	opacity: 0;
+}
+.win-progress-ring.is-hidden {
+	visibility: hidden;
+}
+.win-progress-ring.is-collapsed {
+	display: none;
+}
+.win-progress-ring.is-disabled:not(.is-inactive):not(.is-collapsed) {
+	opacity: 0.6;
+}
+.LayoutRoot,
+.ProgressRingVisual {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.ProgressRingVisual {
+	overflow: visible;
+}
+.ProgressRingTrack,
+.ProgressRingDeterminateIndicator,
+.ProgressRingIndeterminateIndicator {
+	fill: none;
+	stroke-width: var(--ProgressRingStrokeThickness);
+	stroke-linecap: round;
+}
+.ProgressRingTrack {
+	stroke: var(--ProgressRingBackground);
+}
+.ProgressRingDeterminateIndicator {
+	stroke: var(--ProgressRingForeground);
+	stroke-dasharray: 100;
+	transform: rotate(-90deg);
+	transform-origin: center;
+}
+.ProgressRingIndeterminateIndicator {
+	display: none;
+	stroke: var(--ProgressRingForeground);
+	stroke-dasharray: 0.01 100;
+	stroke-dashoffset: 0;
+}
+.win-progress-ring.is-indeterminate .ProgressRingDeterminateIndicator {
+	display: none;
+}
+.win-progress-ring.is-indeterminate .ProgressRingIndeterminateIndicator {
+	display: block;
+}
+.win-progress-ring.is-inactive .ProgressRingIndeterminateIndicator {
+	display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-progress-ring .ProgressRingIndeterminateIndicator {
+		animation-duration: 0.001ms;
+		animation-iteration-count: 1;
+	}
+}
+@keyframes win-progress-ring {
+	to {
+		transform: rotate(360deg);
+	}
+}
+.win-rating-control {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+	min-height: 32px;
+	height: 32px;
+	color: var(--text-primary);
+	user-select: none;
+	outline: none;
+	font-family: var(
+		--ContentControlThemeFontFamily,
+		"Segoe UI Variable",
+		"Segoe UI",
+		system-ui,
+		sans-serif
+	);
+	--rating-font-size: 32px;
+	--rating-actual-size: 16px;
+	--rating-item-spacing: 8px;
+	--rating-unselected-foreground: var(--text-secondary);
+	--rating-selected-foreground: var(--accent-base);
+	--rating-placeholder-foreground: var(--text-primary);
+	--rating-pointer-placeholder-foreground: var(
+		--control-alt-fill-color-tertiary,
+		rgb(0 0 0 / 5.78%)
+	);
+	--rating-disabled-selected-foreground: var(--text-disabled);
+}
+.win-rating-control:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--accent-base));
+	outline-offset: 2px;
+}
+.win-rating-caption-stack {
+	display: flex;
+	align-items: center;
+	height: 32px;
+}
+.win-rating-background-stack,
+.win-rating-foreground-stack {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--rating-item-spacing);
+}
+.win-rating-background-stack {
+	height: var(--rating-actual-size);
+	background: transparent;
+	cursor: pointer;
+	touch-action: none;
+}
+.win-rating-item {
+	position: relative;
+	display: block;
+	flex: 0 0 var(--rating-actual-size);
+	width: var(--rating-actual-size);
+	height: var(--rating-actual-size);
+	overflow: hidden;
+	color: currentColor;
+	pointer-events: none;
+}
+.win-rating-glyph {
+	position: absolute;
+	top: -8px;
+	left: -8px;
+	display: block;
+	width: var(--rating-font-size);
+	height: var(--rating-font-size);
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: var(--rating-font-size);
+	line-height: var(--rating-font-size);
+	font-weight: 400;
+	transform: scale(0.5);
+	transform-origin: center center;
+}
+.win-rating-background-item {
+	color: var(--rating-unselected-foreground);
+}
+.win-rating-foreground-presenter {
+	position: absolute;
+	top: 8px;
+	left: 0;
+	height: var(--rating-actual-size);
+	pointer-events: none;
+}
+.win-rating-foreground-outer,
+.win-rating-foreground-stack {
+	overflow: visible;
+}
+.win-rating-foreground-stack {
+	width: max-content;
+}
+.win-rating-foreground-item {
+	color: var(--rating-selected-foreground);
+}
+.win-rating-caption {
+	margin: 0 0 0 12px;
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 16px;
+	min-height: 16px;
+	white-space: nowrap;
+}
+.win-rating-control.state-placeholder .win-rating-foreground-item {
+	color: var(--rating-placeholder-foreground);
+}
+.win-rating-control.state-pointer-over-placeholder .win-rating-foreground-item,
+.win-rating-control.state-unset .win-rating-foreground-item {
+	color: var(--rating-pointer-placeholder-foreground);
+}
+.win-rating-control.state-disabled .win-rating-foreground-item {
+	color: var(--rating-disabled-selected-foreground);
+}
+.win-rating-control.is-readonly .win-rating-background-stack,
+.win-rating-control.is-disabled .win-rating-background-stack {
+	cursor: default;
+}
+.win-rating-control.is-disabled {
+	pointer-events: none;
+}
+.example-theme-wrapper.theme-dark .win-rating-control,
+.win-theme-scope.theme-dark .win-rating-control {
+	--rating-pointer-placeholder-foreground: var(
+		--control-alt-fill-color-tertiary,
+		rgb(255 255 255 / 4.19%)
+	);
+}
+
+.win-pips-pager {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+	user-select: none;
+}
+.win-pips-pager.orientation-vertical {
+	flex-direction: column;
+}
+.navigation-button,
+.pip-button {
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	flex: 0 0 auto;
+	margin: 0;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--ctrl-strong-fill, var(--text-primary));
+	font-family: "WinUIOnWebIcons";
+	line-height: 1;
+}
+.navigation-button {
+	width: 24px;
+	height: 24px;
+	font-size: 8px;
+	transition:
+		opacity 83ms linear,
+		color 83ms linear;
+}
+.orientation-horizontal .navigation-button {
+	transform: rotate(-90deg);
+}
+.navigation-button.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+.navigation-button:disabled {
+	color: var(--ctrl-strong-fill-disabled, var(--text-disabled));
+}
+.navigation-button:not(:disabled):hover {
+	color: var(--text-secondary);
+}
+.navigation-button:not(:disabled):active span {
+	transform: scale(0.875);
+}
+.navigation-button > span {
+	display: block;
+}
+.pips-viewport {
+	flex: 0 0 auto;
+	overflow: hidden;
+}
+.pips-repeater {
+	display: flex;
+	align-items: center;
+	transition: transform 250ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+.orientation-vertical .pips-repeater {
+	flex-direction: column;
+}
+.pip-button {
+	width: 12px;
+	height: 24px;
+	cursor: default;
+}
+.orientation-vertical .pip-button,
+.orientation-vertical .pip-button.selected {
+	width: 24px;
+	height: 12px;
+}
+.pip-glyph {
+	display: block;
+	font-size: 4px;
+	transition: color 83ms linear;
+}
+.pip-button.selected .pip-glyph,
+.pip-button:not(:disabled):hover .pip-glyph {
+	font-size: 6px;
+}
+.pip-button:not(:disabled):hover,
+.pip-button:not(:disabled):active {
+	color: var(--text-secondary);
+}
+.pip-button:disabled {
+	color: var(--ctrl-strong-fill-disabled, var(--text-disabled));
+}
+.navigation-button:focus-visible,
+.pip-button:focus-visible {
+	outline: 2px solid var(--text-primary);
+	outline-offset: -2px;
+}
+.win-pips-pager.is-disabled {
+	pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.pips-repeater,
+	.navigation-button,
+	.pip-glyph {
+		transition-duration: 0ms;
+	}
+}
+@media (forced-colors: active) {
+	.navigation-button,
+	.pip-button {
+		color: ButtonText;
+	}
+	.navigation-button:focus-visible,
+	.pip-button:focus-visible {
+		outline-color: Highlight;
+	}
+}

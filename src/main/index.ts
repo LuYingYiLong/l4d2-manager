@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from "electron"
+import { app, nativeTheme, shell, BrowserWindow } from "electron"
 import { join } from "path"
 import { electronApp, optimizer, is } from "@electron-toolkit/utils"
 import icon from "../../resources/icon.png?asset"
@@ -6,6 +6,16 @@ import { registerAddonIpc } from "./ipc/addon-ipc"
 import { AddonManager } from "./services/addon-manager"
 
 let mainWindow: BrowserWindow | null = null
+
+const titleBarOverlayHeight = 38
+
+function titleBarOverlayOptions(): Electron.TitleBarOverlayOptions {
+	return {
+		color: "#00000000",
+		symbolColor: nativeTheme.shouldUseDarkColors ? "#ffffff" : "#1f1f1f",
+		height: titleBarOverlayHeight
+	}
+}
 
 app.setName("L4D2 Addon Manager")
 
@@ -22,10 +32,7 @@ function createWindow(): void {
 		titleBarStyle: "hidden",
 		...(process.platform === "win32"
 			? {
-					titleBarOverlay: {
-						color: "#00000000",
-						height: 38
-					}
+					titleBarOverlay: titleBarOverlayOptions()
 				}
 			: {}),
 		...(process.platform === "linux" ? { icon } : {}),
@@ -37,12 +44,19 @@ function createWindow(): void {
 			sandbox: false
 		}
 	})
+	const updateTitleBarOverlay = (): void => {
+		if (!mainWindow || process.platform !== "win32") return
+		mainWindow.setTitleBarOverlay(titleBarOverlayOptions())
+	}
+	if (process.platform === "win32") nativeTheme.on("updated", updateTitleBarOverlay)
 
 	mainWindow.on("ready-to-show", () => {
 		mainWindow?.show()
 	})
 
 	mainWindow.on("closed", () => {
+		if (process.platform === "win32")
+			nativeTheme.removeListener("updated", updateTitleBarOverlay)
 		mainWindow = null
 	})
 

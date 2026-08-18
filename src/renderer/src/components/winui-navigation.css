@@ -1,0 +1,1074 @@
+/* SPDX-License-Identifier: GPL-3.0-only */
+/* 导航控件：SelectorBar、Pivot 及导航相关样式 */
+
+.win-selector-bar,
+.win-menu-bar,
+.win-command-bar,
+.win-page-header,
+.win-title-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.win-selector-bar-item {
+	padding: 8px 12px;
+	color: var(--text-primary);
+	background: transparent;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+}
+.win-pivot {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	color: var(--text-primary);
+	background: var(--PivotBackground, transparent);
+}
+.win-pivot.is-disabled {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.win-pivot-title-content-control {
+	display: flex;
+	min-height: 32px;
+	align-items: center;
+	margin: 14px 0 13px 12px;
+	padding: 0;
+	font-size: 14px;
+	font-weight: 700;
+}
+.win-pivot-template-grid {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	min-width: 0;
+}
+.win-pivot-left-header-presenter,
+.win-pivot-right-header-presenter {
+	display: flex;
+	align-items: center;
+	min-width: max-content;
+	min-height: 48px;
+	padding: 0 8px;
+}
+.win-pivot-header-clipper {
+	position: relative;
+	min-width: 0;
+	min-height: 48px;
+	overflow: hidden;
+}
+.win-pivot-header-scroll-viewer {
+	width: 100%;
+	height: 48px;
+}
+.win-pivot-header-panel {
+	display: flex;
+	align-items: stretch;
+	width: max-content;
+	min-width: 100%;
+	height: 48px;
+}
+.win-pivot-header-item {
+	position: relative;
+	box-sizing: border-box;
+	min-width: max-content;
+	min-height: 48px;
+	height: 48px;
+	flex: 0 0 auto;
+	padding: 0 12px;
+	color: var(--text-primary);
+	font-size: 24px;
+	font-weight: 300;
+	letter-spacing: -0.025em;
+	white-space: nowrap;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+	line-height: 32px;
+	transition:
+		background var(--fast-duration, 167ms) var(--fast-out-slow-in, ease),
+		color var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-pivot-header-item:hover {
+	background: var(--subtle-secondary);
+}
+.win-pivot-header-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-pivot-header-item.is-disabled {
+	color: var(--text-disabled);
+	cursor: default;
+}
+.win-pivot-header-item.is-unselected-locked,
+.win-pivot.is-locked .win-pivot-header-item {
+	pointer-events: none;
+}
+.win-pivot-selected-pipe {
+	position: absolute;
+	right: 12px;
+	bottom: 2px;
+	left: 12px;
+	height: 3px;
+	background: var(--accent-base);
+	border-radius: 2px;
+	opacity: 0;
+	transform: scaleX(0.65);
+	transition:
+		opacity var(--fast-duration, 167ms) var(--fast-out-slow-in, ease),
+		transform var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-pivot-header-item.is-selected .win-pivot-selected-pipe {
+	opacity: 1;
+	transform: scaleX(1);
+}
+.win-pivot-header-item.is-disabled .win-pivot-selected-pipe {
+	opacity: 0;
+}
+.win-pivot-nav-button {
+	position: absolute;
+	top: 6px;
+	z-index: 1;
+	display: flex;
+	width: 20px;
+	min-width: 20px;
+	height: 36px;
+	min-height: 36px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-primary);
+	font-size: 12px;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	line-height: 1;
+	background: color-mix(in srgb, var(--ctrl-fill-default, var(--card-bg)) 65%, transparent);
+	border: 0;
+	border-radius: 0;
+	cursor: pointer;
+}
+.win-pivot-nav-button:hover {
+	background: var(--subtle-secondary);
+}
+.win-pivot-previous-button {
+	left: 0;
+}
+.win-pivot-next-button {
+	right: 0;
+}
+.win-pivot-item-presenter {
+	grid-column: 1 / -1;
+	min-width: 0;
+	min-height: 0;
+	margin: 0 12px;
+	overflow: hidden;
+}
+.win-pivot-item-host {
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	will-change: transform, opacity;
+}
+.win-pivot-nav-glyph {
+	color: inherit;
+	line-height: 12px;
+}
+.win-flip-view {
+	position: relative;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	overflow: hidden;
+	border-radius: 0;
+	touch-action: none;
+}
+.flip-view-track {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	transition: transform var(--normal-duration, 250ms) var(--fast-out-slow-in, ease);
+}
+.win-flip-view.vertical .flip-view-track {
+	flex-direction: column;
+}
+.flip-view-item {
+	display: flex;
+	flex: 0 0 100%;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+}
+.flip-btn {
+	position: absolute;
+	isolation: isolate;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-primary);
+	font-size: 14px;
+	line-height: 1;
+	z-index: 10;
+	background: transparent;
+	border: 1px solid var(--card-stroke);
+	border-radius: 4px;
+	-webkit-backdrop-filter: var(--flyout-backdrop);
+	backdrop-filter: var(--flyout-backdrop);
+	cursor: pointer;
+	transition: background var(--fast-duration);
+}
+.flip-btn::before {
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	content: "";
+	background: var(--flyout-bg);
+	border-radius: inherit;
+	pointer-events: none;
+}
+.flip-btn .flip-arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 8px;
+	transition:
+		transform 100ms ease,
+		color var(--fast-duration);
+}
+.flip-btn:hover {
+	background: transparent;
+}
+.flip-btn:hover .flip-arrow {
+	color: var(--text-primary);
+}
+.flip-btn:active {
+	background: transparent;
+}
+.flip-btn:active .flip-arrow {
+	color: var(--text-secondary);
+	transform: scale(0.85);
+}
+.win-flip-view.horizontal .flip-btn {
+	top: 50%;
+	width: 16px;
+	height: 38px;
+	transform: translateY(-50%);
+}
+.win-flip-view.horizontal .flip-btn:active {
+	transform: translateY(-50%);
+}
+.win-flip-view.horizontal .flip-btn.prev {
+	left: 4px;
+}
+.win-flip-view.horizontal .flip-btn.next {
+	right: 4px;
+}
+.win-flip-view.vertical .flip-btn {
+	left: 50%;
+	width: 40px;
+	height: 16px;
+	transform: translateX(-50%);
+}
+.win-flip-view.vertical .flip-btn:active {
+	transform: translateX(-50%);
+}
+.win-flip-view.vertical .flip-btn.prev {
+	top: 4px;
+}
+.win-flip-view.vertical .flip-btn.next {
+	bottom: 4px;
+}
+.win-flip-view.disabled {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.win-navigation-view {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 100%;
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	color: var(--text-primary);
+	background: var(--host-nav-bg, var(--app-bg, transparent));
+}
+.win-navigation-pane {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: var(--nav-open-pane-width, 320px);
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	min-height: 0;
+	padding: 4px;
+	background: var(--host-nav-pane-bg, var(--card-bg-secondary));
+	border-right: 1px solid var(--divider-stroke, var(--ctrl-border));
+	overflow: hidden;
+	transition:
+		width var(--slow-duration, 350ms) var(--fast-out-slow-in, ease),
+		padding var(--slow-duration, 350ms) var(--fast-out-slow-in, ease),
+		transform var(--slow-duration, 350ms) var(--fast-out-slow-in, ease);
+}
+.win-navigation-view.leftcompact .win-navigation-pane,
+.win-navigation-view.leftminimal .win-navigation-pane {
+	width: var(--nav-compact-pane-width, 48px);
+	padding-right: 4px;
+	padding-left: 4px;
+}
+.win-navigation-view.leftminimal.pane-open .win-navigation-pane {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 5;
+	width: var(--nav-open-pane-width, 320px);
+	box-shadow: 10px 0 24px rgb(0 0 0 / 18%);
+}
+.win-navigation-view.leftminimal .win-navigation-pane {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	z-index: 5;
+}
+.win-navigation-view.leftminimal .win-navigation-content {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	flex: none;
+	margin: 0;
+	padding: 0;
+}
+.win-navigation-view.leftcompact.pane-open .win-navigation-pane {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	z-index: 5;
+	width: var(--nav-open-pane-width, 320px);
+	box-shadow: 10px 0 24px rgb(0 0 0 / 18%);
+}
+.win-navigation-view.leftcompact.pane-open .win-navigation-content {
+	margin-left: var(--nav-compact-pane-width, 48px);
+}
+.win-navigation-view.pane-closed .win-navigation-pane {
+	width: var(--nav-compact-pane-width, 48px);
+}
+.win-navigation-view.pane-hidden .win-navigation-pane,
+.win-navigation-view.pane-hidden .win-navigation-top-bar {
+	display: none;
+}
+.win-navigation-view.leftminimal.pane-closed .win-navigation-pane {
+	width: var(--nav-compact-pane-width, 48px);
+}
+.win-navigation-pane button,
+.win-navigation-item {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	min-height: 40px;
+	padding: 8px 10px;
+	color: var(--text-primary);
+	text-align: left;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.win-navigation-pane button:hover,
+.win-navigation-pane button:focus-visible,
+.win-nav-item:hover,
+.win-nav-item:focus-visible,
+.win-nav-item.is-selected {
+	background: var(--subtle-secondary);
+}
+.win-navigation-pane button:focus-visible,
+.win-nav-item:focus-visible {
+	outline: 2px solid var(--focus-stroke-outer, var(--text-primary));
+	outline-offset: -2px;
+}
+.win-navigation-header {
+	display: flex;
+	align-items: center;
+	min-height: 48px;
+	gap: 6px;
+	padding: 0 4px;
+	font-weight: 600;
+}
+.win-navigation-pane-header,
+.win-navigation-pane-footer,
+.win-navigation-pane-custom-content,
+.win-navigation-pane-search {
+	min-width: 0;
+	padding: 4px;
+}
+.win-navigation-pane-search {
+	padding-top: 0;
+}
+.win-navigation-toggle,
+.win-navigation-back {
+	width: 36px !important;
+	min-width: 36px;
+	justify-content: center;
+	padding: 6px !important;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 18px;
+}
+.win-navigation-back {
+	justify-content: flex-start;
+	gap: 8px;
+	font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+	font-size: inherit;
+}
+.win-navigation-back > span:first-child {
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 18px;
+}
+.win-navigation-toggle {
+	font-size: 16px;
+}
+.win-navigation-menu,
+.win-navigation-footer,
+.win-navigation-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+.win-navigation-scroll-viewer {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+.win-navigation-scroll-viewer .win-scroll-viewer-viewport,
+.win-navigation-scroll-viewer .scroll-content {
+	min-height: 0;
+}
+.win-navigation-menu {
+	min-height: 0;
+}
+.win-navigation-footer,
+.win-navigation-settings {
+	margin-top: auto;
+}
+.win-navigation-footer {
+	margin-top: 8px;
+}
+.win-navigation-settings {
+	margin-top: 2px;
+}
+.win-nav-item {
+	position: relative;
+	box-sizing: border-box;
+	justify-content: flex-start;
+	height: 36px;
+	min-width: 0;
+	min-height: 36px;
+	margin: 2px 0;
+	padding: 0 12px;
+	text-align: left;
+	transition:
+		background var(--fast-duration, 167ms) var(--fast-out-slow-in, ease),
+		color var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-nav-item.is-disabled {
+	color: var(--text-disabled);
+	pointer-events: none;
+}
+.win-nav-indicator {
+	position: absolute;
+	top: 0;
+	left: 4px;
+	z-index: 3;
+	width: 3px;
+	height: 16px;
+	background: var(--accent-base);
+	border-radius: 2px;
+	pointer-events: none;
+	contain: layout paint;
+	will-change: transform, left, width, height;
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+.win-nav-indicator.is-child {
+	left: 36px;
+}
+
+.win-nav-indicator-track {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	overflow: visible;
+	pointer-events: none;
+}
+
+.win-navigation-top-bar .win-nav-indicator {
+	top: auto;
+	bottom: 4px;
+	left: 0;
+	width: 16px;
+	height: 3px;
+	transform: none;
+}
+.win-navigation-top-menu .win-nav-item.is-selected,
+.win-navigation-top-footer .win-nav-item.is-selected {
+	background: transparent;
+}
+.win-nav-icon {
+	display: inline-grid;
+	width: 16px;
+	min-width: 16px;
+	margin-right: 16px;
+	place-items: center;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+}
+.win-nav-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.win-nav-info-badge {
+	margin-left: auto;
+	padding: 1px 6px;
+	color: var(--accent-text);
+	font-size: 0.8em;
+	background: var(--accent-base);
+	border-radius: 999px;
+}
+.win-nav-group-chevron {
+	display: inline-grid;
+	width: 28px !important;
+	min-width: 28px !important;
+	min-height: 28px !important;
+	flex: 0 0 28px;
+	align-items: center;
+	justify-content: center;
+	margin-left: auto;
+	padding: 0 !important;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	cursor: pointer;
+	transition: transform var(--fast-duration, 167ms) var(--fast-out-slow-in, ease);
+}
+.win-nav-group-chevron.expanded {
+	transform: rotate(180deg);
+}
+.win-nav-group-children {
+	max-height: 2000px;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-left: 18px;
+	padding-left: 10px;
+	border-left: 1px solid var(--divider-stroke, var(--ctrl-border));
+	transition:
+		height var(--normal-duration, 250ms) var(--fast-out-slow-in, ease),
+		visibility var(--fast-duration, 167ms) linear;
+}
+.win-nav-group-children[aria-hidden="true"] {
+	visibility: hidden;
+	pointer-events: none;
+}
+.win-nav-group-children .win-nav-item {
+	min-height: 36px;
+	padding-block: 6px;
+}
+.win-nav-item-header {
+	padding: 12px 10px 5px;
+	color: var(--text-secondary);
+	font-size: 0.85em;
+	font-weight: 600;
+}
+.win-nav-item-separator {
+	height: 1px;
+	margin: 6px 8px;
+	background: var(--divider-stroke, var(--ctrl-border));
+}
+.win-navigation-view.leftcompact.pane-closed .win-nav-label,
+.win-navigation-view.leftcompact.pane-closed .win-nav-info-badge,
+.win-navigation-view.leftcompact.pane-closed .win-nav-group-chevron,
+.win-navigation-view.leftminimal.pane-closed .win-nav-label,
+.win-navigation-view.leftminimal.pane-closed .win-nav-info-badge,
+.win-navigation-view.leftminimal.pane-closed .win-nav-group-chevron,
+.win-navigation-view.pane-closed .win-nav-label,
+.win-navigation-view.pane-closed .win-nav-info-badge,
+.win-navigation-view.pane-closed .win-nav-group-chevron {
+	display: none;
+}
+.win-navigation-view.leftcompact.pane-closed .win-nav-item,
+.win-navigation-view.leftminimal.pane-closed .win-nav-item,
+.win-navigation-view.pane-closed .win-nav-item {
+	justify-content: center;
+	padding-inline: 4px;
+}
+.win-navigation-view.leftcompact.pane-closed .win-nav-group-children,
+.win-navigation-view.leftminimal.pane-closed .win-nav-group-children,
+.win-navigation-view.pane-closed .win-nav-group-children,
+.win-navigation-view.leftcompact.pane-closed .win-nav-item-header,
+.win-navigation-view.leftminimal.pane-closed .win-nav-item-header,
+.win-navigation-view.pane-closed .win-nav-item-header,
+.win-navigation-view.leftcompact.pane-closed .win-nav-item-separator,
+.win-navigation-view.leftminimal.pane-closed .win-nav-item-separator,
+.win-navigation-view.pane-closed .win-nav-item-separator {
+	display: none;
+}
+.win-navigation-view.top {
+	display: block;
+}
+.win-navigation-view.top .win-navigation-pane {
+	display: none;
+}
+.win-navigation-view.top .win-navigation-content {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+}
+.win-navigation-top-bar {
+	position: relative;
+	display: flex;
+	align-items: center;
+	box-sizing: border-box;
+	width: calc(100% - 8px);
+	height: 48px;
+	min-height: 48px;
+	margin: 0 4px;
+	background: var(--host-nav-pane-bg, var(--card-bg-secondary));
+	border-bottom: 1px solid var(--divider-stroke, var(--ctrl-border));
+}
+.win-navigation-top-back {
+	width: 40px !important;
+	min-width: 40px !important;
+	justify-content: center !important;
+	padding: 6px !important;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 20px;
+}
+.win-navigation-top-menu {
+	display: flex;
+	align-items: center;
+	flex: 0 1 auto;
+	min-width: 0;
+	gap: 2px;
+	height: 48px;
+	padding: 4px 2px;
+	overflow-x: auto;
+}
+.win-navigation-top-measure {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	width: max-content;
+	align-items: center;
+	gap: 2px;
+	height: 48px;
+	visibility: hidden;
+	pointer-events: none;
+	white-space: nowrap;
+}
+.win-navigation-top-measure .win-nav-item {
+	width: auto;
+	min-width: max-content;
+	height: 40px;
+	min-height: 40px;
+	margin: 0 2px;
+	padding: 0 10px;
+}
+.win-navigation-top-fixed,
+.win-navigation-top-pane-custom-content {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	min-width: 0;
+	max-width: 24%;
+	min-height: 40px;
+	padding: 4px 6px;
+}
+.win-navigation-top-pane-header,
+.win-navigation-top-pane-title {
+	font-weight: 600;
+}
+.win-navigation-top-pane-search,
+.win-navigation-top-pane-footer {
+	max-width: 28%;
+}
+.win-navigation-top-menu .win-nav-item {
+	width: auto;
+	min-width: max-content;
+	height: 40px;
+	min-height: 40px;
+	margin: 0 2px;
+	padding: 0 10px;
+}
+.win-navigation-top-menu .win-nav-group-children,
+.win-nav-more-panel .win-nav-group-children {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	z-index: 10;
+	min-width: 180px;
+	margin: 0;
+	padding: 6px;
+	background: var(--card-bg-primary, var(--card-bg-secondary));
+	border: 1px solid var(--ctrl-border);
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+.win-navigation-top-menu .win-nav-group-children {
+	height: auto !important;
+	max-height: 1000px;
+	margin-left: 0;
+	padding: 6px;
+	border: 1px solid var(--ctrl-border);
+}
+.win-navigation-top-menu .win-nav-group-children[aria-hidden="true"] {
+	display: none;
+}
+.win-navigation-top-menu .win-nav-group {
+	position: relative;
+}
+.win-nav-more-panel .win-nav-group {
+	position: relative;
+}
+.win-navigation-top-menu .win-nav-item-header,
+.win-navigation-top-menu .win-nav-item-separator {
+	display: none;
+}
+.win-navigation-top-menu .win-nav-group-chevron {
+	display: inline-grid;
+}
+.win-navigation-top-footer {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+	margin-left: auto;
+	padding: 4px 2px;
+}
+.win-navigation-top-footer .win-nav-item {
+	width: auto;
+	min-width: max-content;
+	height: 40px;
+	min-height: 40px;
+	margin: 0 2px;
+	padding: 0 10px;
+}
+.win-navigation-more-wrapper {
+	position: relative;
+	flex: 0 0 auto;
+}
+.win-nav-more-button {
+	width: 40px !important;
+	min-width: 40px !important;
+	max-width: 40px;
+	justify-content: center !important;
+	padding: 0 !important;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 22px;
+}
+.win-nav-more-panel {
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	min-width: 220px;
+	max-width: min(320px, calc(100vw - 16px));
+	padding: 6px;
+	background: var(--card-bg-primary, var(--card-bg-secondary));
+	border: 1px solid var(--ctrl-border);
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+.win-nav-more-panel .win-nav-item {
+	width: 100%;
+	min-width: 0;
+	height: 36px;
+	min-height: 36px;
+}
+.win-navigation-content {
+	position: relative;
+	min-width: 0;
+	flex: 1;
+	padding: 0;
+}
+.win-navigation-page-content {
+	min-width: 0;
+	min-height: 0;
+}
+.win-navigation-content-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+	.win-navigation-pane,
+	.win-nav-item,
+	.win-nav-group-chevron {
+		transition: none;
+	}
+}
+.win-split-view {
+	display: flex;
+	min-height: 100%;
+}
+.win-split-pane {
+	display: none;
+	width: 240px;
+	flex: 0 0 auto;
+}
+.win-split-view.pane-open .win-split-pane {
+	display: block;
+}
+.win-split-view > main {
+	min-width: 0;
+	flex: 1;
+}
+.win-breadcrumb-bar {
+	flex-wrap: wrap;
+}
+.win-breadcrumb-bar button {
+	color: var(--accent-base);
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+}
+.win-app-bar-separator {
+	width: 1px;
+	height: 24px;
+	background: var(--stroke-divider);
+}
+.win-split-button {
+	position: relative;
+	display: inline-flex;
+	align-items: stretch;
+	box-sizing: border-box;
+	min-height: 32px;
+	height: 32px;
+	overflow: hidden;
+	background: transparent;
+	border-left: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushCurrent);
+	border-top: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushTopCurrent);
+	border-right: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushCurrent);
+	border-bottom: var(--ButtonBorderThemeThickness) solid var(--ButtonBorderBrushBottomCurrent);
+	border-radius: 4px;
+	--ButtonBorderThemeThickness: 1px;
+	--ButtonBorderBrush: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--ButtonBorderBrushTop: var(--ButtonBorderBrushDefaultTop, var(--ButtonBorderBrush));
+	--ButtonBorderBrushBottom: var(--ButtonBorderBrushDefaultBottom, var(--ctrl-border-accent));
+	--ButtonBorderBrushPointerOver: var(--ButtonBorderBrush);
+	--ButtonBorderBrushPointerOverTop: var(--ButtonBorderBrushTop);
+	--ButtonBorderBrushPointerOverBottom: var(--ButtonBorderBrushBottom);
+	--ButtonBorderBrushPressed: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--ButtonBorderBrushPressedTop: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushPressedBottom: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrush);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushBottom);
+	--SplitButtonPadding: 6px 11px 7px;
+	--SplitButtonBorderBrushDivider: var(--ControlStrokeColorDefaultBrush, var(--ctrl-border));
+	--SplitButtonBorderBrushCheckedDivider: rgba(0, 0, 0, 0.2157);
+}
+.win-split-button:has(.win-btn:hover) {
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrushPointerOver);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushPointerOverTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushPointerOverBottom);
+}
+.win-split-button:has(.win-btn:active),
+.win-split-button.is-open {
+	--ButtonBorderBrushCurrent: var(--ButtonBorderBrushPressed);
+	--ButtonBorderBrushTopCurrent: var(--ButtonBorderBrushPressedTop);
+	--ButtonBorderBrushBottomCurrent: var(--ButtonBorderBrushPressedBottom);
+}
+.win-split-button .win-btn {
+	position: relative;
+	min-height: 0;
+	height: 100%;
+	padding: var(--SplitButtonPadding);
+	border: none;
+	border-radius: 0;
+	--ButtonBorderThemeThickness: 0px;
+}
+.win-split-button .win-btn:not(.win-toggle-button) {
+	--ButtonBackground: var(--ctrl-fill-default);
+	--ButtonBackgroundPointerOver: var(--ctrl-fill-secondary);
+	--ButtonBackgroundPressed: var(--ctrl-fill-tertiary);
+	--ButtonBorderBrush: transparent;
+	--ButtonBorderBrushPointerOver: transparent;
+	--ButtonBorderBrushPressed: transparent;
+	--ButtonBorderBrushDisabled: transparent;
+}
+.win-split-button .win-btn:hover {
+	--ButtonBackgroundCurrent: var(--ButtonBackgroundPointerOver);
+	--ButtonForegroundCurrent: var(--ButtonForegroundPointerOver);
+}
+.win-split-button .win-btn:active {
+	--ButtonBackgroundCurrent: var(--ButtonBackgroundPressed);
+	--ButtonForegroundCurrent: var(--ButtonForegroundPressed);
+}
+.win-split-button.is-open .win-btn:not(.win-toggle-button) {
+	--ButtonBackground: var(--ctrl-fill-tertiary);
+	--ButtonBackgroundPointerOver: var(--ctrl-fill-tertiary);
+	--ButtonForeground: var(--text-secondary);
+	--ButtonForegroundPointerOver: var(--text-secondary);
+}
+.win-split-button.is-checked {
+	--ButtonBorderBrush: var(--accent-border);
+	--ButtonBorderBrushTop: var(--accent-border);
+	--ButtonBorderBrushBottom: var(--accent-border-accent);
+	--ButtonBorderBrushPointerOver: var(--accent-border);
+	--ButtonBorderBrushPointerOverTop: var(--accent-border);
+	--ButtonBorderBrushPointerOverBottom: var(--accent-border-accent);
+	--ButtonBorderBrushPressed: transparent;
+	--ButtonBorderBrushPressedTop: transparent;
+	--ButtonBorderBrushPressedBottom: transparent;
+	--SplitButtonBorderBrushDivider: var(--SplitButtonBorderBrushCheckedDivider);
+}
+.win-split-button.is-checked .win-btn:not(.win-toggle-button) {
+	--ButtonBackground: var(--accent-base);
+	--ButtonBackgroundPointerOver: var(--accent-hover);
+	--ButtonBackgroundPressed: var(--accent-pressed);
+	--ButtonForeground: var(--accent-text);
+	--ButtonForegroundPointerOver: var(--accent-text);
+	--ButtonForegroundPressed: var(--accent-text-secondary);
+}
+.win-split-button.is-checked.is-open .win-btn:not(.win-toggle-button) {
+	--ButtonBackground: var(--accent-pressed);
+	--ButtonBackgroundPointerOver: var(--accent-pressed);
+	--ButtonForeground: var(--accent-text-secondary);
+	--ButtonForegroundPointerOver: var(--accent-text-secondary);
+}
+.win-split-button .win-split-main-button {
+	min-width: var(--SplitButtonMainMinWidth, 35px);
+}
+.win-dropdown-btn {
+	gap: 8px;
+}
+.win-dropdown-btn-wrap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+}
+.win-dropdown-content {
+	display: inline-flex;
+	min-width: 0;
+	align-items: center;
+}
+.win-dd-chevron {
+	display: inline-flex;
+	width: 12px;
+	height: 12px;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 12px;
+	align-self: center;
+	font-size: 0;
+	line-height: 1;
+}
+.win-split-main-button {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+.win-btn-separator {
+	width: 1px;
+	margin: 0;
+	background: var(--SplitButtonBorderBrushDivider);
+	z-index: 1;
+}
+.win-split-button > .win-flyout-anchor .win-btn {
+	height: 100%;
+	flex: 0 0 35px;
+	width: 35px;
+	min-width: 35px;
+	padding: 0 12px 0 0;
+	justify-content: flex-end;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	border-left: 0;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+.win-split-button > .win-flyout-anchor .win-btn .chevron-animate {
+	font-size: 0;
+}
+.win-settings-card {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 16px;
+	background: var(--card-bg);
+	border: 1px solid var(--card-stroke);
+	border-radius: 8px;
+}
+.win-person-picture {
+	display: inline-flex;
+	width: 40px;
+	height: 40px;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	color: var(--accent-text);
+	background: var(--accent-base);
+	border-radius: 50%;
+}
+.win-person-picture img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.win-media-player {
+	max-width: 100%;
+}
+.win-animated-visual-player {
+	display: inline-flex;
+}
+.win-refresh-visualizer {
+	display: inline-block;
+	animation: win-progress-ring 900ms linear infinite;
+}
+.win-control-example {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 12px;
+}
+.win-theme-scope.theme-light {
+	color-scheme: light;
+}
+.win-theme-scope.theme-dark {
+	color-scheme: dark;
+}
+.win-title-bar {
+	min-height: 40px;
+	padding: 0 12px;
+	-webkit-app-region: drag;
+}
+.win-title-bar button,
+.win-title-bar input {
+	-webkit-app-region: no-drag;
+}
+.win-flyout-animation {
+	display: contents;
+}
+.typography-row,
+.color-brush-section {
+	display: block;
+	padding: 8px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		transition-duration: 0.001ms !important;
+	}
+}

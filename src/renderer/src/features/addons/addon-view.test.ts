@@ -12,7 +12,6 @@ const baseAddon: AddonRecord = {
 	modifiedAt: "2026-01-01T00:00:00.000Z",
 	enabled: true,
 	groupId: null,
-	tags: [],
 	workshopTags: [],
 	priority: 0,
 	order: 0,
@@ -31,11 +30,11 @@ describe("Addon view model", () => {
 		expect(groupPath(groups, "coop")).toEqual(["全部 Addon", "地图", "合作"])
 	})
 
-	it("searches tags and sorts higher priority first", () => {
+	it("searches Workshop tags and sorts higher priority first", () => {
 		const addons = [
-			{ ...baseAddon, id: "low", name: "Low", tags: ["地图"], priority: 1 },
-			{ ...baseAddon, id: "high", name: "High", tags: ["地图"], priority: 10 },
-			{ ...baseAddon, id: "other", name: "Other", tags: ["武器"], priority: 99 }
+			{ ...baseAddon, id: "low", name: "Low", workshopTags: ["地图"], priority: 1 },
+			{ ...baseAddon, id: "high", name: "High", workshopTags: ["地图"], priority: 10 },
+			{ ...baseAddon, id: "other", name: "Other", workshopTags: ["武器"], priority: 99 }
 		]
 		const result = filterAndSortAddons(addons, {
 			search: "地图",
@@ -53,9 +52,9 @@ describe("Addon view model", () => {
 
 	it("filters by an exact tag without changing tag casing", () => {
 		const addons = [
-			{ ...baseAddon, id: "map", tags: ["地图"] },
-			{ ...baseAddon, id: "weapon", tags: ["武器"] },
-			{ ...baseAddon, id: "untagged", tags: [] }
+			{ ...baseAddon, id: "map", workshopTags: ["地图"] },
+			{ ...baseAddon, id: "weapon", workshopTags: ["武器"] },
+			{ ...baseAddon, id: "untagged", workshopTags: [] }
 		]
 
 		const result = filterAndSortAddons(addons, {

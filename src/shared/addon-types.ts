@@ -13,6 +13,8 @@ export const L4D2_IPC_CHANNELS = {
 	renameGroup: "l4d2:addons:rename-group",
 	deleteGroup: "l4d2:addons:delete-group",
 	updatePreferences: "l4d2:addons:update-preferences",
+	updateSettings: "l4d2:addons:update-settings",
+	selectGameRoot: "l4d2:addons:select-game-root",
 	check: "l4d2:addons:check",
 	push: "l4d2:addons:push",
 	revealGameDirectory: "l4d2:addons:reveal-game-directory",
@@ -26,6 +28,12 @@ export type SortDirection = "ascending" | "descending"
 export type AddonSourceFilter = "all" | AddonSource
 export type AddonEnabledFilter = "all" | "enabled" | "disabled" | "unlisted"
 export type AddonProblemFilter = "all" | "problems" | "healthy"
+export type AppTheme = "system" | "light" | "dark"
+
+export interface AppSettings {
+	theme: AppTheme
+	gameRoot: string
+}
 
 export interface GameDetectionResult {
 	status: "found" | "unsupported-platform" | "steam-not-found" | "game-not-found"
@@ -50,7 +58,6 @@ export interface AddonRecord {
 	modifiedAt: string
 	enabled: AddonEnabledState
 	groupId: string | null
-	tags: string[]
 	workshopTags: string[]
 	priority: number
 	order: number
@@ -77,6 +84,7 @@ export interface AddonPreferences {
 
 export interface AddonSnapshot {
 	detection: GameDetectionResult
+	settings: AppSettings
 	addons: AddonRecord[]
 	groups: AddonGroup[]
 	preferences: AddonPreferences
@@ -89,7 +97,6 @@ export interface AddonSnapshot {
 export interface AddonUpdate {
 	name?: string
 	groupId?: string | null
-	tags?: string[]
 	priority?: number
 }
 
@@ -128,6 +135,8 @@ export interface L4D2AddonApi {
 	renameGroup(id: string, name: string): Promise<AddonSnapshot>
 	deleteGroup(id: string): Promise<AddonSnapshot>
 	updatePreferences(update: Partial<AddonPreferences>): Promise<AddonSnapshot>
+	updateSettings(update: Partial<AppSettings>): Promise<AddonSnapshot>
+	selectGameRoot(): Promise<string | null>
 	check(): Promise<CheckResult>
 	push(): Promise<PushResult>
 	revealGameDirectory(): Promise<void>

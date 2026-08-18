@@ -91,6 +91,7 @@ app.whenReady().then(async () => {
 
 	const addonManager = new AddonManager(app.getPath("userData"))
 	await addonManager.initialize()
+	nativeTheme.themeSource = addonManager.getSettings().theme
 	registerAddonIpc(addonManager, () => mainWindow)
 
 	createWindow()

@@ -3,6 +3,7 @@ import { join } from "node:path"
 import type {
 	AddonEnabledState,
 	AddonGroup,
+	AppSettings,
 	AddonPreferences,
 	AddonSource
 } from "../../shared/addon-types"
@@ -15,7 +16,6 @@ export interface PersistedAddonState {
 	relativePath: string
 	enabled: AddonEnabledState
 	groupId: string | null
-	tags: string[]
 	workshopTags: string[]
 	priority: number
 	order: number
@@ -29,6 +29,7 @@ export interface WorkshopNameCacheEntry {
 
 export interface AddonStoreData {
 	version: 1
+	settings: AppSettings
 	groups: AddonGroup[]
 	addons: Record<string, PersistedAddonState>
 	workshopNames: Record<string, WorkshopNameCacheEntry>
@@ -36,6 +37,11 @@ export interface AddonStoreData {
 	dirty: boolean
 	lastCheckedAt: string | null
 	lastPushedAt: string | null
+}
+
+export const defaultAppSettings: AppSettings = {
+	theme: "system",
+	gameRoot: ""
 }
 
 export const defaultPreferences: AddonPreferences = {
@@ -72,6 +78,15 @@ function cleanGroup(value: unknown): AddonGroup | null {
 	}
 }
 
+function cleanSettings(value: unknown): AppSettings {
+	if (!value || typeof value !== "object") return { ...defaultAppSettings }
+	const settings = value as Partial<AppSettings>
+	return {
+		theme: settings.theme === "light" || settings.theme === "dark" ? settings.theme : "system",
+		gameRoot: typeof settings.gameRoot === "string" ? settings.gameRoot.trim() : ""
+	}
+}
+
 function cleanAddon(value: unknown): PersistedAddonState | null {
 	if (!value || typeof value !== "object") return null
 	const addon = value as Partial<PersistedAddonState>
@@ -90,7 +105,6 @@ function cleanAddon(value: unknown): PersistedAddonState | null {
 		relativePath: addon.relativePath,
 		enabled: addon.enabled === true || addon.enabled === false ? addon.enabled : "unlisted",
 		groupId: typeof addon.groupId === "string" ? addon.groupId : null,
-		tags: cleanTags(addon.tags),
 		workshopTags: cleanTags(addon.workshopTags),
 		priority: Number.isFinite(addon.priority) ? Math.trunc(Number(addon.priority)) : 0,
 		order: Number.isFinite(addon.order) ? Math.trunc(Number(addon.order)) : 0
@@ -171,6 +185,7 @@ function cleanStoreData(value: unknown): AddonStoreData {
 
 	return {
 		version: 1,
+		settings: cleanSettings(source.settings),
 		groups,
 		addons,
 		workshopNames: cleanWorkshopNames(source.workshopNames),
@@ -184,6 +199,7 @@ function cleanStoreData(value: unknown): AddonStoreData {
 export function createDefaultStoreData(): AddonStoreData {
 	return {
 		version: 1,
+		settings: { ...defaultAppSettings },
 		groups: [],
 		addons: {},
 		workshopNames: {},

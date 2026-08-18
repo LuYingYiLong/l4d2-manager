@@ -10,6 +10,7 @@ import type {
 	AddonRecord,
 	AddonSnapshot,
 	AddonUpdate,
+	AppSettings,
 	CheckResult,
 	GameDetectionResult,
 	PushResult
@@ -36,10 +37,6 @@ const emptyDetection: GameDetectionResult = {
 	diagnostics: []
 }
 
-function cleanTags(tags: string[]): string[] {
-	return [...new Set(tags.map((tag) => tag.trim()).filter(Boolean))]
-}
-
 function addonFallbackName(relativePath: string): string {
 	return basename(relativePath, extname(relativePath))
 }
@@ -52,7 +49,6 @@ function persistedAddon(addon: AddonRecord): PersistedAddonState {
 		relativePath: addon.relativePath,
 		enabled: addon.enabled,
 		groupId: addon.groupId,
-		tags: [...addon.tags],
 		workshopTags: [...addon.workshopTags],
 		priority: addon.priority,
 		order: addon.order
@@ -107,9 +103,9 @@ export class AddonManager {
 	getSnapshot(): AddonSnapshot {
 		return {
 			detection: { ...this.detection, diagnostics: [...this.detection.diagnostics] },
+			settings: { ...this.data.settings },
 			addons: this.addons.map((addon) => ({
 				...addon,
-				tags: [...addon.tags],
 				workshopTags: [...addon.workshopTags],
 				issues: [...addon.issues]
 			})),
@@ -137,7 +133,7 @@ export class AddonManager {
 			})
 
 			try {
-				this.detection = await detectSteamL4D2()
+				this.detection = await detectSteamL4D2(this.data.settings.gameRoot)
 				this.emitProgress({
 					operation: "detect",
 					phase: "completed",
@@ -196,7 +192,6 @@ export class AddonManager {
 					addon.name = name
 				}
 				if (update.groupId !== undefined) addon.groupId = update.groupId
-				if (update.tags !== undefined) addon.tags = cleanTags(update.tags)
 				if (update.priority !== undefined) addon.priority = Math.trunc(update.priority)
 				this.data.addons[addon.id] = persistedAddon(addon)
 			}
@@ -286,6 +281,33 @@ export class AddonManager {
 			await this.store.save(this.data)
 			return this.getSnapshot()
 		})
+	}
+
+	updateSettings(update: Partial<AppSettings>): Promise<AddonSnapshot> {
+		return this.enqueue(async () => {
+			const previousGameRoot = this.data.settings.gameRoot
+			this.data.settings = {
+				theme:
+					update.theme === "light" || update.theme === "dark"
+						? update.theme
+						: update.theme === "system"
+							? "system"
+							: this.data.settings.theme,
+				gameRoot:
+					typeof update.gameRoot === "string"
+						? update.gameRoot.trim()
+						: this.data.settings.gameRoot
+			}
+			await this.store.save(this.data)
+			if (this.data.settings.gameRoot !== previousGameRoot) {
+				await this.refreshData()
+			}
+			return this.getSnapshot()
+		})
+	}
+
+	getSettings(): AppSettings {
+		return { ...this.data.settings }
 	}
 
 	check(): Promise<CheckResult> {
@@ -427,7 +449,7 @@ export class AddonManager {
 	}
 
 	private async refreshData(): Promise<void> {
-		this.detection = await detectSteamL4D2()
+		this.detection = await detectSteamL4D2(this.data.settings.gameRoot)
 		if (this.detection.status !== "found") {
 			this.addons = []
 			this.addonListEntries = []

@@ -33,7 +33,6 @@ describe("Addon scanner", () => {
 				relativePath: "removed.vpk",
 				enabled: false,
 				groupId: null,
-				tags: ["old"],
 				workshopTags: [],
 				priority: 1,
 				order: 9

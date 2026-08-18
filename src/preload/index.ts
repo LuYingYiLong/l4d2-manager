@@ -3,6 +3,7 @@ import type {
 	AddonOperationProgress,
 	AddonPreferences,
 	AddonUpdate,
+	AppSettings,
 	L4D2AddonApi
 } from "../shared/addon-types"
 import { L4D2_IPC_CHANNELS } from "../shared/addon-types"
@@ -26,6 +27,9 @@ const addons: L4D2AddonApi = {
 	deleteGroup: (id) => ipcRenderer.invoke(L4D2_IPC_CHANNELS.deleteGroup, id),
 	updatePreferences: (update: Partial<AddonPreferences>) =>
 		ipcRenderer.invoke(L4D2_IPC_CHANNELS.updatePreferences, update),
+	updateSettings: (update: Partial<AppSettings>) =>
+		ipcRenderer.invoke(L4D2_IPC_CHANNELS.updateSettings, update),
+	selectGameRoot: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.selectGameRoot),
 	check: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.check),
 	push: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.push),
 	revealGameDirectory: () => ipcRenderer.invoke(L4D2_IPC_CHANNELS.revealGameDirectory),

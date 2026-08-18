@@ -1016,7 +1016,7 @@ export function WinDropDownButton(props: WinButtonMenuProps): React.JSX.Element 
 		setMenuOpen(true)
 	}
 	return (
-		<div ref={wrapRef} className="win-dropdown-btn-wrap">
+		<div ref={wrapRef} className={cx("win-dropdown-btn-wrap", className, legacyClassName)}>
 			<WinButton
 				{...buttonProps}
 				className={cx("win-dropdown-btn", className, legacyClassName)}

@@ -25,10 +25,10 @@ export interface AddonFilter {
 	sortDirection: AddonPreferences["sortDirection"]
 }
 
-export function addonTags(addon: Pick<AddonRecord, "tags" | "workshopTags">): string[] {
+export function addonTags(addon: Pick<AddonRecord, "workshopTags">): string[] {
 	return [
 		...new Map(
-			[...addon.workshopTags, ...addon.tags]
+			addon.workshopTags
 				.map((tag) => tag.trim())
 				.filter(Boolean)
 				.map((tag) => [tag.toLocaleLowerCase("zh-CN"), tag] as const)

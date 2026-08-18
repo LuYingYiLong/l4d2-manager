@@ -1,6 +1,6 @@
 import type { BrowserWindow, IpcMainInvokeEvent } from "electron"
-import { ipcMain, shell } from "electron"
-import type { AddonPreferences, AddonUpdate } from "../../shared/addon-types"
+import { dialog, ipcMain, nativeTheme, shell } from "electron"
+import type { AddonPreferences, AddonUpdate, AppSettings } from "../../shared/addon-types"
 import { L4D2_IPC_CHANNELS } from "../../shared/addon-types"
 import type { AddonManager } from "../services/addon-manager"
 
@@ -75,6 +75,23 @@ export function registerAddonIpc(
 	handle(L4D2_IPC_CHANNELS.updatePreferences, (update: unknown) => {
 		if (!update || typeof update !== "object") throw new Error("偏好设置必须是对象")
 		return manager.updatePreferences(update as Partial<AddonPreferences>)
+	})
+	handle(L4D2_IPC_CHANNELS.updateSettings, async (update: unknown) => {
+		if (!update || typeof update !== "object") throw new Error("应用设置必须是对象")
+		const snapshot = await manager.updateSettings(update as Partial<AppSettings>)
+		nativeTheme.themeSource = snapshot.settings.theme
+		return snapshot
+	})
+	handle(L4D2_IPC_CHANNELS.selectGameRoot, async () => {
+		const options: Electron.OpenDialogOptions = {
+			title: "选择《求生之路 2》游戏根目录",
+			properties: ["openDirectory"]
+		}
+		const window = getWindow()
+		const result = window
+			? await dialog.showOpenDialog(window, options)
+			: await dialog.showOpenDialog(options)
+		return result.canceled ? null : (result.filePaths[0] ?? null)
 	})
 	handle(L4D2_IPC_CHANNELS.check, () => manager.check())
 	handle(L4D2_IPC_CHANNELS.push, () => manager.push())

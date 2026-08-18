@@ -948,6 +948,7 @@
 	grid-template-columns: minmax(0, 1fr) 38px;
 	width: 100%;
 	min-width: 120px;
+	height: 32px;
 	min-height: 32px;
 	align-items: stretch;
 	gap: 0;

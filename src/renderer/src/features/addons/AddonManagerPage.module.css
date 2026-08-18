@@ -95,13 +95,6 @@
 	gap: 8px;
 }
 
-.sortButton {
-	min-width: 36px;
-	min-height: 32px;
-	padding-inline: 0;
-	font-size: 18px;
-}
-
 .explorerBody {
 	display: grid;
 	grid-template-columns: 210px minmax(0, 1fr);
@@ -165,7 +158,7 @@
 }
 
 .paneHeading button:focus-visible,
-.sortButton:focus-visible {
+.sortDropdown:focus-visible {
 	outline: 2px solid var(--FocusStrokeColorOuterBrush, var(--TextFillColorPrimary));
 	outline-offset: 2px;
 }

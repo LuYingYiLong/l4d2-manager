@@ -1,0 +1,139 @@
+.page {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	overflow: auto;
+	color: var(--TextFillColorPrimary);
+	background: var(--LayerFillColorDefault);
+}
+
+.content {
+	box-sizing: border-box;
+	width: min(100%, 800px);
+	margin: 0 auto;
+	padding: 40px 32px 48px;
+}
+
+.header {
+	margin-bottom: 28px;
+}
+
+.eyebrow {
+	margin-bottom: 4px;
+	color: var(--TextFillColorSecondary);
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+}
+
+.header h1 {
+	margin: 0;
+	font-size: 28px;
+	font-weight: 600;
+	line-height: 36px;
+}
+
+.header p {
+	margin: 8px 0 0;
+	color: var(--TextFillColorSecondary);
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.notice {
+	margin-bottom: 16px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	margin-top: 16px;
+	padding: 20px 24px 24px;
+	background: var(--CardBackgroundFillColorDefault, var(--card-bg));
+	border: 1px solid var(--CardStrokeColorDefault, var(--card-stroke));
+	border-radius: 8px;
+}
+
+.section h2 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 24px;
+}
+
+.field {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.label {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 20px;
+}
+
+.field :global(.win-combo-box),
+.field :global(.win-textbox) {
+	display: block;
+	width: 100%;
+}
+
+.pathRow {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 8px;
+	align-items: center;
+}
+
+.pathRow :global(.win-textbox) {
+	min-width: 0;
+}
+
+.description {
+	color: var(--TextFillColorSecondary);
+	font-size: 13px;
+	line-height: 20px;
+}
+
+.detection {
+	display: flex;
+	min-width: 0;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 12px;
+	color: var(--TextFillColorSecondary);
+	font-size: 13px;
+	line-height: 20px;
+	background: var(--SubtleFillColorSecondary);
+	border-radius: 4px;
+}
+
+.detection[data-found="true"] {
+	color: var(--TextFillColorPrimary);
+}
+
+.detectionGlyph {
+	flex: 0 0 auto;
+	font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets", sans-serif;
+	font-size: 16px;
+	line-height: 20px;
+}
+
+.loading {
+	display: grid;
+	width: 100%;
+	height: 100%;
+	place-items: center;
+	color: var(--TextFillColorSecondary);
+	background: var(--LayerFillColorDefault);
+}
+
+@media (max-width: 720px) {
+	.content {
+		padding-inline: 20px;
+	}
+}

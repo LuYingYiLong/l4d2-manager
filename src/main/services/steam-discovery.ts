@@ -116,7 +116,36 @@ async function manifestInstallDirectory(manifestPath: string): Promise<string | 
 	}
 }
 
-export async function detectSteamL4D2(): Promise<GameDetectionResult> {
+async function detectL4D2AtGameRoot(gameRoot: string): Promise<GameDetectionResult> {
+	const normalizedRoot = normalize(gameRoot.trim())
+	const left4dead2Path = join(normalizedRoot, "left4dead2")
+	const addonsPath = join(left4dead2Path, "addons")
+	if (!(await pathExists(addonsPath))) {
+		return {
+			status: "game-not-found",
+			message: "指定的游戏根目录无效",
+			diagnostics: [`未找到 Addon 目录：${addonsPath}`],
+			gamePath: normalizedRoot,
+			left4dead2Path,
+			addonsPath,
+			workshopPath: join(addonsPath, "workshop"),
+			addonListPath: join(left4dead2Path, "addonlist.txt")
+		}
+	}
+
+	return {
+		status: "found",
+		message: "已检测到指定的《求生之路 2》目录",
+		diagnostics: [],
+		gamePath: normalizedRoot,
+		left4dead2Path,
+		addonsPath,
+		workshopPath: join(addonsPath, "workshop"),
+		addonListPath: join(left4dead2Path, "addonlist.txt")
+	}
+}
+
+export async function detectSteamL4D2(gameRoot = ""): Promise<GameDetectionResult> {
 	const diagnostics: string[] = []
 
 	if (process.platform !== "win32") {
@@ -126,6 +155,8 @@ export async function detectSteamL4D2(): Promise<GameDetectionResult> {
 			diagnostics
 		}
 	}
+
+	if (gameRoot.trim()) return detectL4D2AtGameRoot(gameRoot)
 
 	const possibleRoots = await findSteamRoots()
 	const steamRoots: string[] = []

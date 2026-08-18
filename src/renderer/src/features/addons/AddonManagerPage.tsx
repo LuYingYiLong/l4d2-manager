@@ -12,6 +12,7 @@ import {
 	WinComboBox,
 	WinCommandBar,
 	WinContentDialog,
+	WinDropDownButton,
 	WinInfoBar,
 	WinListView,
 	WinNumberBox,
@@ -69,17 +70,6 @@ function sourceName(addon: AddonRecord): string {
 function enabledName(addon: AddonRecord): string {
 	if (addon.enabled === "unlisted") return "未登记"
 	return addon.enabled ? "已启用" : "已禁用"
-}
-
-function parseTags(value: string): string[] {
-	return [
-		...new Set(
-			value
-				.split(/[,，]/)
-				.map((tag) => tag.trim())
-				.filter(Boolean)
-		)
-	]
 }
 
 function buildTagOptions(addons: AddonRecord[]): Array<{ label: string; value: string }> {
@@ -195,7 +185,7 @@ function EmptyDetails(): React.JSX.Element {
 		<div className={styles.emptyDetails}>
 			<div className={styles.emptyGlyph}></div>
 			<h2>选择 Addon</h2>
-			<p>在左侧选择一个或多个 Addon 后，可以修改启用状态、分组、标签和优先级。</p>
+			<p>在左侧选择一个或多个 Addon 后，可以修改启用状态、分组和优先级。</p>
 		</div>
 	)
 }
@@ -216,7 +206,6 @@ function SingleDetails({
 	onSave
 }: SingleDetailsProps): React.JSX.Element {
 	const [name, setName] = useState(addon.name)
-	const [tags, setTags] = useState(addon.tags.join(", "))
 	const [priority, setPriority] = useState(addon.priority)
 	const [groupId, setGroupId] = useState(addon.groupId ?? "")
 	const groupOptions = [
@@ -245,14 +234,6 @@ function SingleDetails({
 				<label>
 					<span>显示名称</span>
 					<WinTextBox Value={name} onUpdate:Value={setName} IsEnabled={!busy} />
-				</label>
-				<label>
-					<span>
-						{addon.source === "workshop"
-							? "自定义标签（用逗号分隔）"
-							: "标签（用逗号分隔）"}
-					</span>
-					<WinTextBox Value={tags} onUpdate:Value={setTags} IsEnabled={!busy} />
 				</label>
 				{addon.source === "workshop" && (
 					<label>
@@ -300,7 +281,6 @@ function SingleDetails({
 					onClick={() =>
 						void onSave({
 							name: name.trim() || addon.name,
-							tags: parseTags(tags),
 							priority,
 							groupId: groupId || null
 						})
@@ -394,7 +374,7 @@ function MultiDetails({
 				</div>
 			</section>
 			<section className={styles.detailSection}>
-				<h2>共同标签</h2>
+				<h2>共同 Steam 标签</h2>
 				<div className={styles.tagLine}>
 					{commonTags.length > 0 ? (
 						commonTags.map((tag) => (
@@ -712,40 +692,36 @@ export default function AddonManagerPage({
 									SelectedValuePath="value"
 									SelectedValue={snapshot.preferences.tagFilter}
 									MaxDropDownHeight={360}
-									aria-label="按标签筛选"
 									title="按标签筛选"
 									onUpdate:SelectedValue={(value) =>
 										updatePreferences({ tagFilter: String(value ?? "") })
 									}
 								/>
-								<WinComboBox
-									ItemsSource={sortOptions}
-									DisplayMemberPath="label"
-									SelectedValuePath="value"
-									SelectedValue={snapshot.preferences.sortBy}
-									onUpdate:SelectedValue={(value) =>
+								<WinDropDownButton
+									title="排序"
+									Items={sortOptions.flatMap((option) =>
+										(["descending", "ascending"] as const).map((direction) => ({
+											Text: `${option.label}（${direction === "ascending" ? "升序" : "降序"}）`,
+											Value: `${option.value}:${direction}`,
+											IsChecked:
+												snapshot.preferences.sortBy === option.value &&
+												snapshot.preferences.sortDirection === direction
+										}))
+									)}
+									onSelect={(item) => {
+										const [sortBy, sortDirection] = String(
+											item.Value ?? ""
+										).split(":")
+										if (!sortBy || !sortDirection) return
 										updatePreferences({
-											sortBy: String(
-												value
-											) as AddonSnapshot["preferences"]["sortBy"]
-										})
-									}
-								/>
-								<WinButton
-									className={styles.sortButton}
-									aria-label={`按优先级${snapshot.preferences.sortDirection === "ascending" ? "升序" : "降序"}排列`}
-									title={`按优先级${snapshot.preferences.sortDirection === "ascending" ? "升序" : "降序"}排列`}
-									onClick={() =>
-										updatePreferences({
+											sortBy: sortBy as AddonSnapshot["preferences"]["sortBy"],
 											sortDirection:
-												snapshot.preferences.sortDirection === "ascending"
-													? "descending"
-													: "ascending"
+												sortDirection as AddonSnapshot["preferences"]["sortDirection"]
 										})
-									}
+									}}
 								>
-									{snapshot.preferences.sortDirection === "ascending" ? "↑" : "↓"}
-								</WinButton>
+									排序
+								</WinDropDownButton>
 							</div>
 						</div>
 

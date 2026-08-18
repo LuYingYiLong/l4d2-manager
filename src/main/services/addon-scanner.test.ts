@@ -34,6 +34,7 @@ describe("Addon scanner", () => {
 				enabled: false,
 				groupId: null,
 				tags: ["old"],
+				workshopTags: [],
 				priority: 1,
 				order: 9
 			}

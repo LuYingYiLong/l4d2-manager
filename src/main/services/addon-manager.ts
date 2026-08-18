@@ -21,7 +21,11 @@ import { loadAddonImage } from "./addon-image"
 import { AddonStore, createDefaultStoreData, defaultPreferences } from "./addon-store"
 import type { AddonStoreData, PersistedAddonState } from "./addon-store"
 import { detectSteamL4D2 } from "./steam-discovery"
-import { fetchWorkshopNames, isWorkshopNameCacheFresh, workshopIdFromAddon } from "./steam-workshop"
+import {
+	fetchWorkshopMetadata,
+	isWorkshopNameCacheFresh,
+	workshopIdFromAddon
+} from "./steam-workshop"
 import { ensureWritable, pathExists, writeFileAtomically } from "./file-utils"
 
 const execFileAsync = promisify(execFile)
@@ -49,6 +53,7 @@ function persistedAddon(addon: AddonRecord): PersistedAddonState {
 		enabled: addon.enabled,
 		groupId: addon.groupId,
 		tags: [...addon.tags],
+		workshopTags: [...addon.workshopTags],
 		priority: addon.priority,
 		order: addon.order
 	}
@@ -105,6 +110,7 @@ export class AddonManager {
 			addons: this.addons.map((addon) => ({
 				...addon,
 				tags: [...addon.tags],
+				workshopTags: [...addon.workshopTags],
 				issues: [...addon.issues]
 			})),
 			groups: this.data.groups.map((group) => ({ ...group })),
@@ -271,6 +277,7 @@ export class AddonManager {
 				problemFilter: ["all", "problems", "healthy"].includes(next.problemFilter)
 					? next.problemFilter
 					: defaultPreferences.problemFilter,
+				tagFilter: typeof next.tagFilter === "string" ? next.tagFilter.trim() : "",
 				sortBy: ["priority", "name", "modifiedAt", "order"].includes(next.sortBy)
 					? next.sortBy
 					: defaultPreferences.sortBy,
@@ -429,13 +436,13 @@ export class AddonManager {
 
 		this.addonListEntries = await readAddonList(this.detection.addonListPath)
 		const scan = await scanAddons(this.detection, this.addonListEntries, this.data.addons)
-		const workshopNameWarning = await this.updateWorkshopNames(scan.addons)
+		const workshopMetadataWarning = await this.updateWorkshopMetadata(scan.addons)
 		this.detection = {
 			...this.detection,
 			diagnostics: [
 				...this.detection.diagnostics,
 				...scan.diagnostics,
-				...(workshopNameWarning ? [workshopNameWarning] : [])
+				...(workshopMetadataWarning ? [workshopMetadataWarning] : [])
 			]
 		}
 		this.addons = scan.addons
@@ -444,7 +451,7 @@ export class AddonManager {
 		await this.store.save(this.data)
 	}
 
-	private async updateWorkshopNames(addons: AddonRecord[]): Promise<string | null> {
+	private async updateWorkshopMetadata(addons: AddonRecord[]): Promise<string | null> {
 		const workshopAddons = addons.filter(
 			(addon) => addon.source === "workshop" && !addon.missing
 		)
@@ -464,17 +471,19 @@ export class AddonManager {
 
 		if (idsToFetch.length > 0) {
 			try {
-				const fetchedNames = await fetchWorkshopNames(idsToFetch)
+				const fetchedMetadata = await fetchWorkshopMetadata(idsToFetch)
 				const fetchedAt = new Date().toISOString()
 				for (const id of idsToFetch) {
-					if (!fetchedNames.has(id)) continue
+					const metadata = fetchedMetadata.get(id)
+					if (!metadata) continue
 					this.data.workshopNames[id] = {
-						name: fetchedNames.get(id) ?? null,
+						name: metadata.name,
+						tags: [...metadata.tags],
 						fetchedAt
 					}
 				}
 			} catch (error) {
-				warning = `Steam Workshop 名称查询失败，已使用缓存或文件名：${
+				warning = `Steam Workshop 元数据查询失败，已使用缓存或文件名：${
 					error instanceof Error ? error.message : String(error)
 				}`
 			}
@@ -486,6 +495,8 @@ export class AddonManager {
 			if (!id) continue
 
 			const cachedName = this.data.workshopNames[id]?.name
+			const cachedTags = this.data.workshopNames[id]?.tags
+			if (cachedTags) addon.workshopTags = [...cachedTags]
 			const persistedName = this.data.addons[addon.id]?.name
 			const fallbackName = addonFallbackName(addon.relativePath)
 			const previousName = previousNames.get(id)

@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { AddonRecord } from "../../shared/addon-types"
-import { fetchWorkshopNames, isWorkshopNameCacheFresh, workshopIdFromAddon } from "./steam-workshop"
+import {
+	fetchWorkshopMetadata,
+	fetchWorkshopNames,
+	isWorkshopNameCacheFresh,
+	workshopIdFromAddon
+} from "./steam-workshop"
 
 afterEach(() => {
 	vi.unstubAllGlobals()
@@ -46,6 +51,35 @@ describe("Steam Workshop", () => {
 				["123", "My Addon"],
 				["456", null]
 			])
+		)
+	})
+
+	it("reads official Workshop tags from published file details", async () => {
+		const fetchMock = vi.fn(
+			async () =>
+				new Response(
+					JSON.stringify({
+						response: {
+							publishedfiledetails: [
+								{
+									publishedfileid: "123",
+									title: "Tagged Addon",
+									tags: [
+										{ tag: "Campaign" },
+										{ display_name: "Sound" },
+										"Campaign"
+									]
+								}
+							]
+						}
+					}),
+					{ status: 200, headers: { "Content-Type": "application/json" } }
+				)
+		)
+		vi.stubGlobal("fetch", fetchMock)
+
+		expect(await fetchWorkshopMetadata(["123"])).toEqual(
+			new Map([["123", { name: "Tagged Addon", tags: ["Campaign", "Sound"] }]])
 		)
 	})
 

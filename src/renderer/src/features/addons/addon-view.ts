@@ -20,8 +20,20 @@ export interface AddonFilter {
 	source: AddonSourceFilter
 	enabled: AddonEnabledFilter
 	problems: AddonPreferences["problemFilter"]
+	tag: string
 	sortBy: AddonPreferences["sortBy"]
 	sortDirection: AddonPreferences["sortDirection"]
+}
+
+export function addonTags(addon: Pick<AddonRecord, "tags" | "workshopTags">): string[] {
+	return [
+		...new Map(
+			[...addon.workshopTags, ...addon.tags]
+				.map((tag) => tag.trim())
+				.filter(Boolean)
+				.map((tag) => [tag.toLocaleLowerCase("zh-CN"), tag] as const)
+		).values()
+	]
 }
 
 function childGroups(groups: AddonGroup[], parentId: string | null): AddonGroupTreeItem[] {
@@ -102,8 +114,13 @@ export function filterAndSortAddons(addons: AddonRecord[], filter: AddonFilter):
 			return addon.issues.length === 0
 		})
 		.filter((addon) => {
+			const selectedTag = filter.tag.trim().toLocaleLowerCase("zh-CN")
+			if (!selectedTag) return true
+			return addonTags(addon).some((tag) => tag.toLocaleLowerCase("zh-CN") === selectedTag)
+		})
+		.filter((addon) => {
 			if (!query) return true
-			return [addon.name, addon.relativePath, ...addon.tags].some((value) =>
+			return [addon.name, addon.relativePath, ...addonTags(addon)].some((value) =>
 				value.toLocaleLowerCase("zh-CN").includes(query)
 			)
 		})

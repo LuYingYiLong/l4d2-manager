@@ -16,13 +16,13 @@ import {
 	WinListView,
 	WinNumberBox,
 	WinTextBox,
-	WinTitleBar,
 	WinToggleSwitch,
 	WinTreeView
 } from "../../components"
 import type { WinItem } from "../../components"
 import {
 	buildGroupTree,
+	addonTags,
 	filterAndSortAddons,
 	findGroupTreeItem,
 	formatDate,
@@ -80,6 +80,27 @@ function parseTags(value: string): string[] {
 				.filter(Boolean)
 		)
 	]
+}
+
+function buildTagOptions(addons: AddonRecord[]): Array<{ label: string; value: string }> {
+	const tags = new Map<string, string>()
+	for (const tag of addons.flatMap(addonTags)) {
+		const normalized = tag.trim()
+		if (!normalized) continue
+		const key = normalized.toLocaleLowerCase("zh-CN")
+		if (!tags.has(key)) tags.set(key, normalized)
+	}
+
+	return [
+		{ label: "全部标签", value: "" },
+		...Array.from(tags.values())
+			.sort((left, right) => left.localeCompare(right, "zh-CN"))
+			.map((tag) => ({ label: tag, value: tag }))
+	]
+}
+
+interface AddonManagerPageProps {
+	search?: string
 }
 
 function AddonThumbnail({ addon }: { addon: AddonRecord }): React.JSX.Element {
@@ -156,11 +177,13 @@ function AddonRow({ addon }: { addon: AddonRecord }): React.JSX.Element {
 				<div className={styles.tagLine}>
 					<span>{enabledName(addon)}</span>
 					<span>优先级 {addon.priority}</span>
-					{addon.tags.slice(0, 3).map((tag) => (
-						<span className={styles.tag} key={tag}>
-							{tag}
-						</span>
-					))}
+					{addonTags(addon)
+						.slice(0, 3)
+						.map((tag) => (
+							<span className={styles.tag} key={tag}>
+								{tag}
+							</span>
+						))}
 				</div>
 			</div>
 		</div>
@@ -224,9 +247,29 @@ function SingleDetails({
 					<WinTextBox Value={name} onUpdate:Value={setName} IsEnabled={!busy} />
 				</label>
 				<label>
-					<span>标签（用逗号分隔）</span>
+					<span>
+						{addon.source === "workshop"
+							? "自定义标签（用逗号分隔）"
+							: "标签（用逗号分隔）"}
+					</span>
 					<WinTextBox Value={tags} onUpdate:Value={setTags} IsEnabled={!busy} />
 				</label>
+				{addon.source === "workshop" && (
+					<label>
+						<span>Steam 创意工坊标签</span>
+						<div className={styles.tagLine}>
+							{addon.workshopTags.length > 0 ? (
+								addon.workshopTags.map((tag) => (
+									<span className={styles.tag} key={tag}>
+										{tag}
+									</span>
+								))
+							) : (
+								<span className={styles.muted}>尚未获取</span>
+							)}
+						</div>
+					</label>
+				)}
 				<div className={styles.twoColumns}>
 					<label>
 						<span>优先级</span>
@@ -324,7 +367,7 @@ function MultiDetails({
 	const [priority, setPriority] = useState(0)
 	const [groupId, setGroupId] = useState("")
 	const commonTags = addons
-		.map((addon) => addon.tags)
+		.map(addonTags)
 		.reduce((common, tags) => common.filter((tag) => tags.includes(tag)))
 	const groupOptions = [
 		{ label: "未分组", value: "" },
@@ -402,9 +445,10 @@ function MultiDetails({
 	)
 }
 
-export default function AddonManagerPage(): React.JSX.Element {
+export default function AddonManagerPage({
+	search: controlledSearch
+}: AddonManagerPageProps = {}): React.JSX.Element {
 	const [snapshot, setSnapshot] = useState<AddonSnapshot | null>(null)
-	const [search, setSearch] = useState("")
 	const [selectedIds, setSelectedIds] = useState<string[]>([])
 	const [busy, setBusy] = useState(true)
 	const [progress, setProgress] = useState<AddonOperationProgress | null>(null)
@@ -412,6 +456,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 	const [settingsOpen, setSettingsOpen] = useState(false)
 	const [groupDialog, setGroupDialog] = useState<"create" | "rename" | "delete" | null>(null)
 	const [groupName, setGroupName] = useState("")
+	const search = controlledSearch ?? ""
 
 	const applySnapshot = useCallback((next: AddonSnapshot): void => {
 		setSnapshot(next)
@@ -454,6 +499,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 
 	const preferences = snapshot?.preferences
 	const groupTree = useMemo(() => buildGroupTree(snapshot?.groups ?? []), [snapshot?.groups])
+	const tagOptions = useMemo(() => buildTagOptions(snapshot?.addons ?? []), [snapshot?.addons])
 	const selectedGroupItem = findGroupTreeItem(groupTree, preferences?.selectedGroupId ?? null)
 	const filteredAddons = useMemo(
 		() =>
@@ -463,6 +509,7 @@ export default function AddonManagerPage(): React.JSX.Element {
 				source: preferences?.sourceFilter ?? "all",
 				enabled: preferences?.enabledFilter ?? "all",
 				problems: preferences?.problemFilter ?? "all",
+				tag: preferences?.tagFilter ?? "",
 				sortBy: preferences?.sortBy ?? "priority",
 				sortDirection: preferences?.sortDirection ?? "descending"
 			}),
@@ -592,24 +639,12 @@ export default function AddonManagerPage(): React.JSX.Element {
 
 	return (
 		<div className={styles.page}>
-			<WinTitleBar
-				PreferredHeightOption="Compact"
-				style={{ "--TitleBarCompactHeight": "38px" }}
-				LeftHeader={
-					<WinCommandBar
-						className={`${styles.commandBar} ${styles.titleBarCommandBar}`}
-						DefaultLabelPosition="Right"
-						HorizontalAlignment="Left"
-						PrimaryCommands={commandBarItems}
-					/>
-				}
-			/>
-			<div className={styles.titleBarSearch}>
-				<WinTextBox
-					Value={search}
-					PlaceholderText="搜索名称、文件名或标签"
-					ShowDeleteButton
-					onUpdate:Value={setSearch}
+			<div className={styles.pageToolbar}>
+				<WinCommandBar
+					className={styles.commandBar}
+					DefaultLabelPosition="Right"
+					HorizontalAlignment="Left"
+					PrimaryCommands={commandBarItems}
 				/>
 			</div>
 
@@ -669,6 +704,18 @@ export default function AddonManagerPage(): React.JSX.Element {
 												value
 											) as AddonSnapshot["preferences"]["problemFilter"]
 										})
+									}
+								/>
+								<WinComboBox
+									ItemsSource={tagOptions}
+									DisplayMemberPath="label"
+									SelectedValuePath="value"
+									SelectedValue={snapshot.preferences.tagFilter}
+									MaxDropDownHeight={360}
+									aria-label="按标签筛选"
+									title="按标签筛选"
+									onUpdate:SelectedValue={(value) =>
+										updatePreferences({ tagFilter: String(value ?? "") })
 									}
 								/>
 								<WinComboBox

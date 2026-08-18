@@ -8,6 +8,7 @@ import { callback, commonStyle, cssLength, cx, domProps, itemLabel, itemsOf } fr
 import type { WinChangeProps, WinItem, WinItemProps, WinStyle, WinValue } from "./winui-shared"
 
 type WinNavigationDisplayMode = "Auto" | "Left" | "LeftCompact" | "LeftMinimal" | "Top"
+type PaneTransition = "opening" | "closing" | null
 
 type WinNavigationProps = WinItemProps &
 	WinChangeProps<WinValue> & {
@@ -116,6 +117,8 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 		return null
 	})
 	const [internalPaneOpen, setInternalPaneOpen] = useState(true)
+	const [paneTransition, setPaneTransition] = useState<PaneTransition>(null)
+	const [hamburgerAnimation, setHamburgerAnimation] = useState("")
 	const [autoPaneOverride, setAutoPaneOverride] = useState<boolean | null>(null)
 	const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 	const [groupHeights, setGroupHeights] = useState<Record<string, number>>({})
@@ -126,6 +129,10 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 	const [indicatorStyle, setIndicatorStyle] = useState<WinStyle>({ opacity: 0 })
 	const [indicatorIsChild, setIndicatorIsChild] = useState(false)
 	const previousResponsiveMode = useRef<string | undefined>(undefined)
+	const paneTransitionTarget = useRef<boolean | null>(null)
+	const paneTransitionTimer = useRef<number | undefined>(undefined)
+	const hamburgerPressed = useRef(false)
+	const hamburgerPressDone = useRef(false)
 	const selectedItem =
 		props.SelectedItem ??
 		(props.SelectedIndex !== undefined && props.SelectedIndex >= 0
@@ -150,10 +157,45 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 			? (autoPaneOverride ?? responsiveMode === "Left")
 			: internalPaneOpen)
 	const isPaneContentVisible = isTopNavigation || !isCompactMode || isPaneOpen
+	const compactItemContentVisible = isPaneContentVisible || responsiveMode === "LeftCompact"
+	const previousPaneOpen = useRef(isPaneOpen)
+	const renderedPaneTransition: PaneTransition =
+		paneTransition ??
+		(previousPaneOpen.current !== isPaneOpen ? (isPaneOpen ? "opening" : "closing") : null)
+
+	const startPaneTransition = (nextOpen: boolean) => {
+		if (isTopNavigation) return
+		if (paneTransitionTimer.current !== undefined) {
+			window.clearTimeout(paneTransitionTimer.current)
+		}
+		setPaneTransition(nextOpen ? "opening" : "closing")
+		const duration = isCompactMode ? (nextOpen ? 350 : 120) : 200
+		paneTransitionTimer.current = window.setTimeout(() => {
+			paneTransitionTimer.current = undefined
+			setPaneTransition(null)
+		}, duration)
+	}
 
 	useEffect(() => {
 		if (displayMode === "Auto") setAutoPaneOverride(null)
 	}, [displayMode, responsiveMode])
+	useEffect(() => {
+		if (previousPaneOpen.current === isPaneOpen) return
+		previousPaneOpen.current = isPaneOpen
+		if (paneTransitionTarget.current === isPaneOpen) {
+			paneTransitionTarget.current = null
+			return
+		}
+		startPaneTransition(isPaneOpen)
+	}, [isPaneOpen, responsiveMode])
+	useEffect(
+		() => () => {
+			if (paneTransitionTimer.current !== undefined) {
+				window.clearTimeout(paneTransitionTimer.current)
+			}
+		},
+		[]
+	)
 
 	useEffect(() => {
 		const element = shellRef.current
@@ -371,8 +413,36 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 			document.removeEventListener("pointerdown", onPointerDown, true)
 		}
 	}, [moreOpen])
+	const onHamburgerPointerDown = () => {
+		hamburgerPressed.current = true
+		hamburgerPressDone.current = false
+		setHamburgerAnimation("pressing")
+	}
+	const onHamburgerPointerUp = () => {
+		if (!hamburgerPressed.current) return
+		hamburgerPressed.current = false
+		if (hamburgerPressDone.current) setHamburgerAnimation("releasing")
+	}
+	const onHamburgerPointerLeave = () => {
+		if (!hamburgerPressed.current) return
+		hamburgerPressed.current = false
+		if (hamburgerPressDone.current) setHamburgerAnimation("releasing")
+	}
+	const onHamburgerAnimationEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
+		if (event.animationName === "hamburger-press" && hamburgerAnimation === "pressing") {
+			hamburgerPressDone.current = true
+			if (!hamburgerPressed.current) setHamburgerAnimation("releasing")
+			return
+		}
+		if (event.animationName === "hamburger-release" && hamburgerAnimation === "releasing") {
+			hamburgerPressDone.current = false
+			setHamburgerAnimation("")
+		}
+	}
 	const setPaneOpen = (next: boolean) => {
 		if (next === isPaneOpen) return
+		paneTransitionTarget.current = next
+		startPaneTransition(next)
 		if (props.IsPaneOpen === undefined) {
 			if (displayMode === "Auto") setAutoPaneOverride(next)
 			else setInternalPaneOpen(next)
@@ -583,7 +653,7 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 						parentValue ? "win-nav-group-child" : undefined,
 						selected && selectOnInvoked ? "is-selected" : undefined,
 						!enabled ? "is-disabled" : undefined,
-						isCompactMode && !isPaneContentVisible ? "icon-only" : undefined
+						isCompactMode && !compactItemContentVisible ? "icon-only" : undefined
 					)}
 					role={prefix === "more" ? "menuitem" : "button"}
 					tabIndex={enabled ? 0 : -1}
@@ -621,13 +691,13 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 					{navigationIcon(item) && (
 						<span className="win-nav-icon">{navigationIcon(item)}</span>
 					)}
-					{isPaneContentVisible && (
+					{compactItemContentVisible && (
 						<span className="win-nav-label">{navigationLabel(item)}</span>
 					)}
-					{infoBadge && isPaneContentVisible && (
+					{infoBadge && compactItemContentVisible && (
 						<span className="win-nav-info-badge">{itemLabel(infoBadge)}</span>
 					)}
-					{hasChildren && isPaneContentVisible && (
+					{hasChildren && compactItemContentVisible && (
 						<span
 							className={cx(
 								"win-nav-group-chevron",
@@ -920,7 +990,13 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 		...props.style,
 		...commonStyle(props),
 		"--nav-open-pane-width": cssLength(props.OpenPaneLength ?? 320),
-		"--nav-compact-pane-width": cssLength(props.CompactPaneLength ?? 48)
+		"--nav-compact-pane-width": cssLength(props.CompactPaneLength ?? 48),
+		"--nav-pane-duration": isCompactMode ? "350ms" : "200ms",
+		"--nav-pane-open-duration": isCompactMode ? "350ms" : "200ms",
+		"--nav-pane-close-duration": isCompactMode ? "120ms" : "200ms",
+		"--nav-pane-easing": isCompactMode
+			? "cubic-bezier(0.1, 0.9, 0.2, 1)"
+			: "cubic-bezier(0, 0.35, 0.15, 1)"
 	}
 	return (
 		<div
@@ -930,7 +1006,10 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 			style={navigationStyle}
 		>
 			<aside
-				className="win-navigation-pane"
+				className={cx(
+					"win-navigation-pane",
+					renderedPaneTransition ? `is-pane-${renderedPaneTransition}` : undefined
+				)}
 				aria-label={String(props.PaneTitle ?? "Navigation")}
 				aria-hidden={props.IsPaneVisible === false}
 			>
@@ -969,9 +1048,24 @@ export function WinNavigationView(props: WinNavigationProps): React.JSX.Element 
 							type="button"
 							className="win-navigation-toggle"
 							aria-label={isPaneOpen ? "Close navigation" : "Open navigation"}
+							onPointerDown={onHamburgerPointerDown}
+							onPointerUp={onHamburgerPointerUp}
+							onPointerLeave={onHamburgerPointerLeave}
+							onPointerCancel={onHamburgerPointerLeave}
 							onClick={() => setPaneOpen(!isPaneOpen)}
 						>
-							{"\uE700"}
+							<span
+								className={cx(
+									"icon",
+									"animated-icon",
+									"animated-icon-hamburger",
+									hamburgerAnimation || undefined
+								)}
+								onAnimationEnd={onHamburgerAnimationEnd}
+								aria-hidden="true"
+							>
+								{"\uE700"}
+							</span>
 						</button>
 					)}
 					{isPaneContentVisible && <span>{props.PaneTitle}</span>}

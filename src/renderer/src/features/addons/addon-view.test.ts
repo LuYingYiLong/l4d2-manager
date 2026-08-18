@@ -13,6 +13,7 @@ const baseAddon: AddonRecord = {
 	enabled: true,
 	groupId: null,
 	tags: [],
+	workshopTags: [],
 	priority: 0,
 	order: 0,
 	issues: [],
@@ -42,10 +43,32 @@ describe("Addon view model", () => {
 			source: "all",
 			enabled: "all",
 			problems: "all",
+			tag: "",
 			sortBy: "priority",
 			sortDirection: "descending"
 		})
 
 		expect(result.map((addon) => addon.id)).toEqual(["high", "low"])
+	})
+
+	it("filters by an exact tag without changing tag casing", () => {
+		const addons = [
+			{ ...baseAddon, id: "map", tags: ["地图"] },
+			{ ...baseAddon, id: "weapon", tags: ["武器"] },
+			{ ...baseAddon, id: "untagged", tags: [] }
+		]
+
+		const result = filterAndSortAddons(addons, {
+			search: "",
+			selectedGroupId: null,
+			source: "all",
+			enabled: "all",
+			problems: "all",
+			tag: " 地图 ",
+			sortBy: "priority",
+			sortDirection: "descending"
+		})
+
+		expect(result.map((addon) => addon.id)).toEqual(["map"])
 	})
 })

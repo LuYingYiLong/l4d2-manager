@@ -51,6 +51,7 @@ export interface AddonRecord {
 	enabled: AddonEnabledState
 	groupId: string | null
 	tags: string[]
+	workshopTags: string[]
 	priority: number
 	order: number
 	issues: string[]
@@ -69,6 +70,7 @@ export interface AddonPreferences {
 	sourceFilter: AddonSourceFilter
 	enabledFilter: AddonEnabledFilter
 	problemFilter: AddonProblemFilter
+	tagFilter: string
 	sortBy: AddonSortKey
 	sortDirection: SortDirection
 }

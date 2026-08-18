@@ -16,12 +16,14 @@ export interface PersistedAddonState {
 	enabled: AddonEnabledState
 	groupId: string | null
 	tags: string[]
+	workshopTags: string[]
 	priority: number
 	order: number
 }
 
 export interface WorkshopNameCacheEntry {
 	name: string | null
+	tags: string[]
 	fetchedAt: string
 }
 
@@ -41,6 +43,7 @@ export const defaultPreferences: AddonPreferences = {
 	sourceFilter: "all",
 	enabledFilter: "all",
 	problemFilter: "all",
+	tagFilter: "",
 	sortBy: "priority",
 	sortDirection: "descending"
 }
@@ -88,6 +91,7 @@ function cleanAddon(value: unknown): PersistedAddonState | null {
 		enabled: addon.enabled === true || addon.enabled === false ? addon.enabled : "unlisted",
 		groupId: typeof addon.groupId === "string" ? addon.groupId : null,
 		tags: cleanTags(addon.tags),
+		workshopTags: cleanTags(addon.workshopTags),
 		priority: Number.isFinite(addon.priority) ? Math.trunc(Number(addon.priority)) : 0,
 		order: Number.isFinite(addon.order) ? Math.trunc(Number(addon.order)) : 0
 	}
@@ -101,6 +105,7 @@ function cleanWorkshopNames(value: unknown): Record<string, WorkshopNameCacheEnt
 		if (!/^\d{1,20}$/.test(id) || !cacheValue || typeof cacheValue !== "object") continue
 
 		const entry = cacheValue as Partial<WorkshopNameCacheEntry>
+		const hasTags = Array.isArray(entry.tags)
 		if (
 			(entry.name !== null && typeof entry.name !== "string") ||
 			typeof entry.fetchedAt !== "string" ||
@@ -110,7 +115,8 @@ function cleanWorkshopNames(value: unknown): Record<string, WorkshopNameCacheEnt
 
 		result[id] = {
 			name: typeof entry.name === "string" ? entry.name.trim() || null : null,
-			fetchedAt: entry.fetchedAt
+			tags: cleanTags(entry.tags),
+			fetchedAt: hasTags ? entry.fetchedAt : new Date(0).toISOString()
 		}
 	}
 
@@ -131,6 +137,7 @@ function cleanPreferences(value: unknown): AddonPreferences {
 	const problemFilter = ["all", "problems", "healthy"].includes(String(preferences.problemFilter))
 		? preferences.problemFilter
 		: "all"
+	const tagFilter = typeof preferences.tagFilter === "string" ? preferences.tagFilter.trim() : ""
 	const sortBy = ["priority", "name", "modifiedAt", "order"].includes(String(preferences.sortBy))
 		? preferences.sortBy
 		: "priority"
@@ -141,6 +148,7 @@ function cleanPreferences(value: unknown): AddonPreferences {
 		sourceFilter: sourceFilter as AddonPreferences["sourceFilter"],
 		enabledFilter: enabledFilter as AddonPreferences["enabledFilter"],
 		problemFilter: problemFilter as AddonPreferences["problemFilter"],
+		tagFilter,
 		sortBy: sortBy as AddonPreferences["sortBy"],
 		sortDirection: preferences.sortDirection === "ascending" ? "ascending" : "descending"
 	}

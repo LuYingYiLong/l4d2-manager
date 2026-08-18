@@ -7,9 +7,20 @@ const requestBatchSize = 50
 const requestTimeoutMs = 10_000
 export const workshopNameCacheMaxAgeMs = 30 * 24 * 60 * 60 * 1000
 
+export interface WorkshopMetadata {
+	name: string | null
+	tags: string[]
+}
+
+interface PublishedFileTag {
+	tag?: string
+	display_name?: string
+}
+
 interface PublishedFileDetail {
 	publishedfileid?: string | number
 	title?: string
+	tags?: Array<PublishedFileTag | string>
 }
 
 interface PublishedFileDetailsResponse {
@@ -36,19 +47,31 @@ export function isWorkshopNameCacheFresh(fetchedAt: string, now = Date.now()): b
 	)
 }
 
-function responseDetailMap(details: PublishedFileDetail[]): Map<string, string | null> {
-	const result = new Map<string, string | null>()
+function cleanTags(tags: Array<PublishedFileTag | string> | undefined): string[] {
+	if (!Array.isArray(tags)) return []
+	return [
+		...new Set(
+			tags
+				.map((tag) => (typeof tag === "string" ? tag : (tag.display_name ?? tag.tag ?? "")))
+				.map((tag) => tag.trim())
+				.filter(Boolean)
+		)
+	]
+}
+
+function responseDetailMap(details: PublishedFileDetail[]): Map<string, WorkshopMetadata> {
+	const result = new Map<string, WorkshopMetadata>()
 	for (const detail of details) {
 		const id = detail.publishedfileid === undefined ? null : String(detail.publishedfileid)
 		if (!id || !/^\d{1,20}$/.test(id)) continue
 
 		const name = typeof detail.title === "string" ? detail.title.trim() : ""
-		result.set(id, name || null)
+		result.set(id, { name: name || null, tags: cleanTags(detail.tags) })
 	}
 	return result
 }
 
-async function fetchWorkshopNameBatch(ids: string[]): Promise<Map<string, string | null>> {
+async function fetchWorkshopMetadataBatch(ids: string[]): Promise<Map<string, WorkshopMetadata>> {
 	const body = new URLSearchParams({ itemcount: String(ids.length) })
 	ids.forEach((id, index) => body.append(`publishedfileids[${index}]`, id))
 
@@ -64,12 +87,14 @@ async function fetchWorkshopNameBatch(ids: string[]): Promise<Map<string, string
 	const details = payload.response?.publishedfiledetails
 	if (!Array.isArray(details)) throw new Error("Steam API 返回了无法识别的 Workshop 数据")
 
-	const result = new Map<string, string | null>(ids.map((id) => [id, null]))
-	for (const [id, name] of responseDetailMap(details)) result.set(id, name)
+	const result = new Map<string, WorkshopMetadata>(
+		ids.map((id) => [id, { name: null, tags: [] }])
+	)
+	for (const [id, metadata] of responseDetailMap(details)) result.set(id, metadata)
 	return result
 }
 
-export async function fetchWorkshopNames(ids: string[]): Promise<Map<string, string | null>> {
+export async function fetchWorkshopMetadata(ids: string[]): Promise<Map<string, WorkshopMetadata>> {
 	const uniqueIds = [...new Set(ids.filter((id) => /^\d{1,20}$/.test(id)))]
 	const batches: string[][] = []
 
@@ -77,6 +102,11 @@ export async function fetchWorkshopNames(ids: string[]): Promise<Map<string, str
 		batches.push(uniqueIds.slice(index, index + requestBatchSize))
 	}
 
-	const results = await Promise.all(batches.map((batch) => fetchWorkshopNameBatch(batch)))
+	const results = await Promise.all(batches.map((batch) => fetchWorkshopMetadataBatch(batch)))
 	return new Map(results.flatMap((result) => [...result.entries()]))
+}
+
+export async function fetchWorkshopNames(ids: string[]): Promise<Map<string, string | null>> {
+	const metadata = await fetchWorkshopMetadata(ids)
+	return new Map([...metadata].map(([id, value]) => [id, value.name]))
 }

@@ -36,7 +36,8 @@ function createWindow(): void {
 				}
 			: {}),
 		...(process.platform === "linux" ? { icon } : {}),
-		backgroundMaterial: process.platform === "win32" ? "tabbed" : "auto",
+		backgroundColor: "#00000000",
+		backgroundMaterial: process.platform === "win32" ? "acrylic" : "auto",
 		webPreferences: {
 			preload: join(__dirname, "../preload/index.js"),
 			contextIsolation: true,

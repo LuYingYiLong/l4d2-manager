@@ -101,6 +101,9 @@ export const WinTitleBar = forwardRef<WinTitleBarHandle, WinTitleBarProps>(
 		const [isDeactivated, setIsDeactivated] = useState(false)
 		const [backPressed, setBackPressed] = useState(false)
 		const [panePressed, setPanePressed] = useState(false)
+		const [paneHamburgerAnimation, setPaneHamburgerAnimation] = useState("")
+		const paneHamburgerPressed = useRef(false)
+		const paneHamburgerPressDone = useRef(false)
 		const compactThreshold = useRef<number | null>(null)
 		const contentDesiredWidth = useRef(240)
 		const initialDocumentTitle = useRef<string | null>(null)
@@ -296,6 +299,38 @@ export const WinTitleBar = forwardRef<WinTitleBarHandle, WinTitleBarProps>(
 		}
 		const handlePaneToggle = () =>
 			callback<unknown>(props, "onPaneToggleRequested", "PaneToggleRequested")?.(undefined)
+		const onPaneHamburgerPointerDown = () => {
+			paneHamburgerPressed.current = true
+			paneHamburgerPressDone.current = false
+			setPaneHamburgerAnimation("pressing")
+		}
+		const onPaneHamburgerPointerUp = () => {
+			if (!paneHamburgerPressed.current) return
+			paneHamburgerPressed.current = false
+			if (paneHamburgerPressDone.current) setPaneHamburgerAnimation("releasing")
+		}
+		const onPaneHamburgerPointerLeave = () => {
+			if (!paneHamburgerPressed.current) return
+			paneHamburgerPressed.current = false
+			if (paneHamburgerPressDone.current) setPaneHamburgerAnimation("releasing")
+		}
+		const onPaneHamburgerAnimationEnd = (event: React.AnimationEvent<HTMLSpanElement>) => {
+			if (
+				event.animationName === "hamburger-press" &&
+				paneHamburgerAnimation === "pressing"
+			) {
+				paneHamburgerPressDone.current = true
+				if (!paneHamburgerPressed.current) setPaneHamburgerAnimation("releasing")
+				return
+			}
+			if (
+				event.animationName === "hamburger-release" &&
+				paneHamburgerAnimation === "releasing"
+			) {
+				paneHamburgerPressDone.current = false
+				setPaneHamburgerAnimation("")
+			}
+		}
 		return (
 			<header
 				ref={rootRef}
@@ -340,13 +375,32 @@ export const WinTitleBar = forwardRef<WinTitleBarHandle, WinTitleBarProps>(
 						)}
 						data-nav-pane-toggle="true"
 						aria-label="Navigation menu"
-						onPointerDown={() => setPanePressed(true)}
-						onPointerUp={() => setPanePressed(false)}
-						onPointerLeave={() => setPanePressed(false)}
+						onPointerDown={() => {
+							setPanePressed(true)
+							onPaneHamburgerPointerDown()
+						}}
+						onPointerUp={() => {
+							setPanePressed(false)
+							onPaneHamburgerPointerUp()
+						}}
+						onPointerLeave={() => {
+							setPanePressed(false)
+							onPaneHamburgerPointerLeave()
+						}}
+						onPointerCancel={() => {
+							setPanePressed(false)
+							onPaneHamburgerPointerLeave()
+						}}
 						onClick={handlePaneToggle}
 					>
 						<span
-							className="icon animated-icon animated-icon-hamburger"
+							className={cx(
+								"icon",
+								"animated-icon",
+								"animated-icon-hamburger",
+								paneHamburgerAnimation || undefined
+							)}
+							onAnimationEnd={onPaneHamburgerAnimationEnd}
 							aria-hidden="true"
 						>
 							{"\uE700"}
